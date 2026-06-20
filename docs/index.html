@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MonkGrab — Webpage to Markdown, in one click</title>
-<meta name="description" content="A Chrome extension that saves any webpage as clean Markdown — including content locked inside cross-origin iframes that other tools can't reach. 100% local, no tracking." />
-<meta property="og:title" content="MonkGrab — Webpage to Markdown" />
+<title>MonkGrab: Webpage to Markdown, in one click</title>
+<meta name="description" content="A Chrome extension that saves any webpage as clean Markdown, including content locked inside cross-origin iframes that other tools can't reach. 100% local, no tracking." />
+<meta property="og:title" content="MonkGrab: Webpage to Markdown" />
 <meta property="og:description" content="Save any page as clean Markdown, even content locked inside cross-origin iframes. One click. Fully local." />
 <meta property="og:type" content="website" />
 <link rel="icon" href="icons/icon32.png" />
@@ -113,7 +113,7 @@
   <div class="wrap">
     <img class="mark" src="icons/icon128.png" alt="MonkGrab icon" />
     <h1>MonkGrab</h1>
-    <p class="tagline">Save any webpage as clean Markdown in one click — <strong>including content locked inside cross-origin iframes</strong> that other tools can't reach.</p>
+    <p class="tagline">Save any webpage as clean Markdown in one click, <strong>including content locked inside cross-origin iframes</strong> that other tools can't reach.</p>
     <div class="cta">
       <a class="btn btn-primary" href="https://chromewebstore.google.com/detail/babcbelnbfdgmandombjmhdhedknfpdh">Chrome Web Store <span style="opacity:.8;font-weight:500">· in review</span></a>
       <a class="btn btn-ghost" href="https://github.com/monkfromearth/monkgrab">View on GitHub</a>
@@ -188,11 +188,11 @@
     <p class="note"><strong>MonkGrab collects nothing and sends nothing anywhere.</strong> No analytics, no telemetry, no accounts, zero network requests. The Markdown is written straight to your Downloads folder and nowhere else. Full policy on <a href="https://github.com/monkfromearth/monkgrab/blob/main/PRIVACY.md">GitHub</a>.</p>
     <table>
       <tr><th>Permission</th><th>Why it's needed</th></tr>
-      <tr><td><code>&lt;all_urls&gt;</code></td><td>Read content inside cross-origin iframes — impossible without it (<code>activeTab</code> can't reach cross-origin frames). Used only when you click or hotkey.</td></tr>
+      <tr><td><code>&lt;all_urls&gt;</code></td><td>Read content inside cross-origin iframes, impossible without it (<code>activeTab</code> can't reach cross-origin frames). Used only when you click or hotkey.</td></tr>
       <tr><td><code>scripting</code></td><td>Run the DOM-to-Markdown converter inside each frame.</td></tr>
       <tr><td><code>downloads</code></td><td>Write the <code>.md</code> file to your Downloads folder.</td></tr>
     </table>
-    <p style="margin-top:14px" class="lead">The host permission is broad because the feature requires it — but it only ever runs on your explicit action, never on page load or in the background.</p>
+    <p style="margin-top:14px" class="lead">The host permission is broad because the feature requires it, but it only ever runs on your explicit action, never on page load or in the background.</p>
   </div>
 </section>
 
@@ -202,10 +202,10 @@
     <p class="lead">One Manifest V3 service worker. No content scripts, no popup, no remote code, no build step.</p>
     <ol class="steps">
       <li>A click or hotkey calls <code>grab()</code>.</li>
-      <li>It injects <code>extractFrame</code> into <strong>every frame</strong> via <code>chrome.scripting.executeScript({ allFrames: true })</code> — each runs in its own origin, defeating the cross-origin wall.</li>
+      <li>It injects <code>extractFrame</code> into <strong>every frame</strong> via <code>chrome.scripting.executeScript({ allFrames: true })</code>: each runs in its own origin, defeating the cross-origin wall.</li>
       <li>Each frame walks its DOM from the best content root (<code>main</code> → <code>article</code> → <code>body</code>) into Markdown, resolving relative URLs to absolute.</li>
       <li>Frames are ranked by text length; the main one is kept and only substantial extra frames are appended (ads/widgets filtered out).</li>
-      <li>The Markdown is downloaded as a <code>data:</code> URL — the right approach since <code>createObjectURL</code> is unavailable in MV3 workers.</li>
+      <li>The Markdown is downloaded as a <code>data:</code> URL, the right approach since <code>createObjectURL</code> is unavailable in MV3 workers.</li>
     </ol>
     <p style="margin-top:16px">It's one heavily-commented file: <a href="https://github.com/monkfromearth/monkgrab/blob/main/background.js"><code>background.js</code></a>.</p>
   </div>

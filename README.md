@@ -1,8 +1,8 @@
 <div align="center">
 
-# MonkGrab — Webpage to Markdown, in one click
+# MonkGrab: Webpage to Markdown, in one click
 
-**Save any webpage as clean Markdown — including content locked inside cross-origin iframes** that copy-paste, bookmarklets, and most "save to Markdown" tools simply can't reach.
+**Save any webpage as clean Markdown, including content locked inside cross-origin iframes** that copy-paste, bookmarklets, and most "save to Markdown" tools simply can't reach.
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-in%20review-f0a020)](https://chromewebstore.google.com/detail/babcbelnbfdgmandombjmhdhedknfpdh)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-14b8a6)](https://developer.chrome.com/docs/extensions/mv3/intro/)
@@ -36,7 +36,7 @@ Built by [monkfromearth](https://monkfrom.earth) · [Documentation site](https:/
 
 ## What it does
 
-You're reading a page — an article, a course lesson, an embedded doc — and you want it
+You're reading a page (an article, a course lesson, an embedded doc) and you want it
 as Markdown. Click the MonkGrab icon (or hit the hotkey). A `.md` file lands in your
 Downloads folder. No popup, no second step, no server, no copy-paste.
 
@@ -56,20 +56,20 @@ that frame's DOM, and turns it into Markdown on the spot. The frames are ranked 
 much real text they hold, the main one is kept, and any other substantial frame is
 appended below it. Ad and widget frames are filtered out.
 
-> Note: reaching cross-origin frames is **only** possible with a host permission —
+> Note: reaching cross-origin frames is **only** possible with a host permission;
 > Chrome's `activeTab` permission explicitly does not cover them. That's why MonkGrab
 > requests broad host access, and why it does so transparently. See
 > [Permissions & privacy](#permissions--privacy).
 
 ## Features
 
-- **One click / one hotkey** — `⌘⇧G` on Mac, `Ctrl+Shift+G` elsewhere. No popup, no UI to learn.
-- **Cross-origin iframes included** — the whole reason it exists.
-- **Clean Markdown** — headings, paragraphs, lists, bold/italic, links, images, inline code, code blocks, blockquotes, rules.
-- **Absolute links & images** — relative `href`/`src` are resolved to full URLs so they still work after the file leaves the site.
-- **Smart content detection** — ranks frames by text volume, keeps the main content, drops nav/chrome/ad widgets.
-- **Auto-named files** — `<domain>_<slug>_<YYYY-MM-DD_HH-MM-SS>.md`, with title, source URL, and capture time at the top.
-- **100% local** — conversion runs in your browser, output goes only to your disk. No Python, no server, no network calls. See [PRIVACY.md](PRIVACY.md).
+- **One click / one hotkey**: `⌘⇧G` on Mac, `Ctrl+Shift+G` elsewhere. No popup, no UI to learn.
+- **Cross-origin iframes included**: the whole reason it exists.
+- **Clean Markdown**: headings, paragraphs, lists, bold/italic, links, images, inline code, code blocks, blockquotes, rules.
+- **Absolute links & images**: relative `href`/`src` are resolved to full URLs so they still work after the file leaves the site.
+- **Smart content detection**: ranks frames by text volume, keeps the main content, drops nav/chrome/ad widgets.
+- **Auto-named files**: `<domain>_<slug>_<YYYY-MM-DD_HH-MM-SS>.md`, with title, source URL, and capture time at the top.
+- **100% local**: conversion runs in your browser, output goes only to your disk. No Python, no server, no network calls. See [PRIVACY.md](PRIVACY.md).
 
 ## Install
 
@@ -92,7 +92,7 @@ with broad host access get an in-depth review, so this takes a little longer):
 
 **https://chromewebstore.google.com/detail/babcbelnbfdgmandombjmhdhedknfpdh**
 
-Until it's approved the link may 404 — install from source above in the meantime.
+Until it's approved the link may 404; install from source above in the meantime.
 
 ## Usage
 
@@ -101,7 +101,7 @@ Open any page, then:
 - **Click** the MonkGrab toolbar icon, **or**
 - **Press** `⌘⇧G` (Mac) / `Ctrl+Shift+G` (Windows/Linux).
 
-A badge flashes on the icon — a teal **✓** on success, a red **!** on failure (with the
+A badge flashes on the icon: a teal **✓** on success, a red **!** on failure (with the
 reason; hover or check the file didn't download). The `.md` file appears at:
 
 ```
@@ -139,17 +139,17 @@ MonkGrab collects nothing and transmits nothing. Full policy: **[PRIVACY.md](PRI
 
 | Permission | Why it's needed |
 |---|---|
-| `<all_urls>` host access | Read content inside **cross-origin iframes** — impossible without it (`activeTab` can't reach cross-origin frames). Used only when you click/hotkey. |
+| `<all_urls>` host access | Read content inside **cross-origin iframes**: impossible without it (`activeTab` can't reach cross-origin frames). Used only when you click/hotkey. |
 | `scripting` | Run the DOM→Markdown converter inside each frame. |
 | `downloads` | Write the `.md` file to your Downloads folder. |
 
 The host permission is broad because the feature requires it, but it is exercised
-**only on your explicit action** — never on page load, never in the background. Nothing
+**only on your explicit action**: never on page load, never in the background. Nothing
 ever leaves your machine.
 
 ## How it works (for developers)
 
-MonkGrab is a single MV3 background **service worker** — no content scripts, no popup,
+MonkGrab is a single MV3 background **service worker**: no content scripts, no popup,
 no remote code, no build step required to run it.
 
 1. **Trigger.** `chrome.action.onClicked` (toolbar) and `chrome.commands.onCommand`
@@ -157,7 +157,7 @@ no remote code, no build step required to run it.
 2. **Inject everywhere.** `grab()` finds the active tab and calls
    `chrome.scripting.executeScript({ target: { tabId, allFrames: true }, func: extractFrame })`.
    `extractFrame` is serialized and run independently inside **every frame** of the tab,
-   each in its own origin — this is what defeats the cross-origin wall.
+   each in its own origin; this is what defeats the cross-origin wall.
 3. **DOM → Markdown.** Inside each frame, `extractFrame` walks the DOM from the best
    content root (`main` → `[role=main]` → `article` → `body`). A `block()` walker handles
    block elements (headings, paragraphs, lists, `pre`, blockquotes, rules, images) and an
@@ -176,7 +176,7 @@ no remote code, no build step required to run it.
 6. **Feedback.** A badge (`✓` / `!`) flashes for ~2s via `chrome.action.setBadgeText`.
 
 Everything lives in [`background.js`](background.js) and is heavily commented. There is
-no transpilation, bundler, or dependency — it's plain ES that Chrome runs directly.
+no transpilation, bundler, or dependency; it's plain ES that Chrome runs directly.
 
 ## Project layout
 
@@ -203,13 +203,13 @@ service worker, icons) and nothing else:
 
 Upload that zip to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole/).
 When the listing asks for a privacy policy and a justification for the broad host
-permission, use [PRIVACY.md](PRIVACY.md) — it's written for exactly that review.
+permission, use [PRIVACY.md](PRIVACY.md); it's written for exactly that review.
 
 ## Known limitations
 
-- **Tables** aren't converted to Markdown tables yet — cell text falls through as plain text.
+- **Tables** aren't converted to Markdown tables yet; cell text falls through as plain text.
 - **Very large pages** are encoded as a `data:` URL; extremely large captures can hit Chrome's URL-length ceiling and fail the download (rare).
-- **JS-rendered content** must already be on the page when you invoke MonkGrab — it reads the live DOM, it doesn't wait for lazy loads.
+- **JS-rendered content** must already be on the page when you invoke MonkGrab; it reads the live DOM, it doesn't wait for lazy loads.
 - **`chrome://`, the Web Store, and other restricted pages** can't be injected into (Chrome forbids it); MonkGrab will report "Inject failed" there.
 
 ## Roadmap
@@ -222,10 +222,9 @@ permission, use [PRIVACY.md](PRIVACY.md) — it's written for exactly that revie
 
 ## Contributing
 
-Issues and PRs welcome. The codebase is intentionally a single dependency-free file —
-keep changes plain ES, keep the service worker the only moving part, and don't add a
+Issues and PRs welcome. The codebase is intentionally a single dependency-free file. Keep changes plain ES, keep the service worker the only moving part, and don't add a
 build step for the runtime. Run `node --check background.js` before pushing.
 
 ## License
 
-MIT — see [LICENSE](LICENSE). © 2026 Sameer Khan (monkfromearth).
+MIT. See [LICENSE](LICENSE). © 2026 Sameer Khan (monkfromearth).
