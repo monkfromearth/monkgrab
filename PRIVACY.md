@@ -1,4 +1,4 @@
-# MonkGrab — Privacy Policy
+# MonkGrab: Privacy Policy
 
 _Last updated: 2026-06-20_
 
@@ -7,8 +7,8 @@ _Last updated: 2026-06-20_
 ## What MonkGrab does
 
 When you click the MonkGrab toolbar icon (or press its hotkey) on a page, the
-extension reads the visible content of that page — including content inside
-cross-origin iframes — converts it to Markdown, and saves it as a `.md` file in
+extension reads the visible content of that page (including content inside
+cross-origin iframes), converts it to Markdown, and saves it as a `.md` file in
 your local Downloads folder. That is the entire function.
 
 ## Data collection
@@ -28,7 +28,7 @@ required, not optional, and here is exactly why:
 
 - The whole point of MonkGrab is capturing content that lives inside **cross-origin
   iframes** (embedded readers, course lessons, docs viewers). Chrome's security model
-  **does not** let the `activeTab` permission reach cross-origin frames — only an
+  **does not** let the `activeTab` permission reach cross-origin frames; only an
   explicit host permission can. Without `<all_urls>`, the core feature is impossible.
 - The permission is used **only when you explicitly invoke the extension** (a click
   or the hotkey). MonkGrab never reads pages in the background, on page load, or
@@ -48,7 +48,7 @@ required, not optional, and here is exactly why:
 
 Because MonkGrab reads every frame of the page you invoke it on, the saved file
 includes whatever those frames contain at that moment. You are saving your own
-page, to your own disk, by your own action — nothing is shared. If a page shows
+page, to your own disk, by your own action, and nothing is shared. If a page shows
 sensitive content in a frame, that content will appear in the file you save.
 Treat the saved `.md` as you would any other personal download.
 

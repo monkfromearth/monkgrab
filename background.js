@@ -1,4 +1,4 @@
-// MonkGrab — webpage to Markdown — service worker.
+// MonkGrab: webpage to Markdown service worker.
 // Injects into EVERY frame of the active tab (allFrames bypasses the cross-origin
 // iframe wall, since the function runs inside each frame's own context), converts
 // each content frame's DOM to Markdown right there, then downloads ONE .md file
@@ -115,7 +115,7 @@ function slugify(s) {
   return (s || "").toLowerCase().replace(/[^\w]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40).replace(/-+$/, "");
 }
 
-// <domain>_<short-title-slug>_<date>_<time>.md — short, readable, time always kept.
+// <domain>_<short-title-slug>_<date>_<time>.md (short, readable, time always kept).
 function buildName(url, title) {
   const u = new URL(url);
   const host = u.hostname.replace(/^www\./, "");
