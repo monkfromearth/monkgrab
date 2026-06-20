@@ -4,6 +4,17 @@ All notable changes to MonkGrab are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [SemVer](https://semver.org/).
 
+## [1.0.1] — 2026-06-20
+
+### Fixed
+- **Bullet-list content silently dropped on some pages.** Lists were collected by
+  scanning a `<ul>`/`<ol>`'s direct `<li>` children. Renderers that emit invalid
+  markup (e.g. `<ul><p><li>...</li></p></ul>`, seen on Karat's question guides)
+  cause the browser to reparent the `<li>`s, so the direct-child scan captured
+  nothing and whole sections (scoring rubrics, clarifications) came out empty.
+  Now list items are found by their nearest list ancestor (`li.closest("ul,ol")`),
+  which is robust to that reparenting. Verified against the real page markup.
+
 ## [1.0.0] — 2026-06-20
 
 First public release.

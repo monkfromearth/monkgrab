@@ -57,12 +57,15 @@ function extractFrame() {
         const t = inline(c).trim();
         if (t) md += t + "\n\n";
       } else if (tag === "UL" || tag === "OL") {
+        // Find list items by their nearest list ancestor, NOT as direct children.
+        // Some renderers emit invalid markup like <ul><p><li>...</li></p></ul>;
+        // the browser then reparents the <li>s so they are not direct children of
+        // the <ul>, and a direct-child scan would silently capture nothing.
         let i = 1;
-        c.childNodes.forEach((li) => {
-          if (li.nodeType === 1 && li.tagName === "LI") {
-            const mark = tag === "OL" ? i++ + ". " : "- ";
-            md += "  ".repeat(depth) + mark + inline(li).trim() + "\n";
-          }
+        c.querySelectorAll("li").forEach((li) => {
+          if (li.closest("ul,ol") !== c) return; // belongs to a nested sub-list
+          const mark = tag === "OL" ? i++ + ". " : "- ";
+          md += "  ".repeat(depth) + mark + inline(li).trim() + "\n";
         });
         md += "\n";
       } else if (tag === "PRE") {
