@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MonkGrab",
   "version": "1.0.0",
-  "description": "Webpage to Markdown in one click. Save any page as clean Markdown, even content locked inside cross-origin iframes that other tools miss.",
+  "description": "Save any webpage as clean Markdown in one click, including content locked inside cross-origin iframes that other tools miss.",
   "author": "monkfromearth",
   "homepage_url": "https://monkfrom.earth",
   "minimum_chrome_version": "102",
