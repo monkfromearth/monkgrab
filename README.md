@@ -4,6 +4,7 @@
 
 **Save any webpage as clean Markdown — including content locked inside cross-origin iframes** that copy-paste, bookmarklets, and most "save to Markdown" tools simply can't reach.
 
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-in%20review-f0a020)](https://chromewebstore.google.com/detail/babcbelnbfdgmandombjmhdhedknfpdh)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-14b8a6)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![No tracking](https://img.shields.io/badge/tracking-none-success)](PRIVACY.md)
@@ -86,8 +87,12 @@ Works on Chrome 102+ and any Chromium-based browser that supports Manifest V3
 
 ### Chrome Web Store
 
-Listing pending. (See [Build a Web Store package](#build-a-web-store-package) to
-produce the upload zip yourself.)
+🚧 **In review.** The listing is submitted and pending Google's review (extensions
+with broad host access get an in-depth review, so this takes a little longer):
+
+**https://chromewebstore.google.com/detail/babcbelnbfdgmandombjmhdhedknfpdh**
+
+Until it's approved the link may 404 — install from source above in the meantime.
 
 ## Usage
 
