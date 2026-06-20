@@ -4,7 +4,7 @@ All notable changes to MonkGrab are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [SemVer](https://semver.org/).
 
-## [1.0.1] — 2026-06-20
+## [1.0.1] - 2026-06-20
 
 ### Fixed
 - **Bullet-list content silently dropped on some pages.** Lists were collected by
@@ -21,13 +21,13 @@ All notable changes to MonkGrab are documented here. Format loosely follows
   line. Verified against real page markup: 159/159 rendered source lines captured,
   0 dropped.
 
-## [1.0.0] — 2026-06-20
+## [1.0.0] - 2026-06-20
 
 First public release.
 
 ### Added
 - One-click / one-hotkey (`⌘⇧G` · `Ctrl+Shift+G`) capture of any page to Markdown.
-- Cross-origin iframe content extraction via all-frames injection — the core feature.
+- Cross-origin iframe content extraction via all-frames injection (the core feature).
 - DOM→Markdown converter: headings, paragraphs, lists, bold/italic, inline code,
   code blocks, blockquotes, rules, images, links.
 - Relative `href`/`src` resolved to absolute URLs so links survive off-site.
