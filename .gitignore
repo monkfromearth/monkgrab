@@ -1,0 +1,13 @@
+# Build output
+dist/
+*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Node (only if tooling is ever added)
+node_modules/

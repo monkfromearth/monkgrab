@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#C2613F"/>
+  <!-- webpage -->
+  <rect x="22" y="15" width="84" height="98" rx="12" fill="#F5EBDD"/>
+  <!-- browser header dots -->
+  <circle cx="37" cy="29" r="4" fill="#C2613F"/>
+  <circle cx="51" cy="29" r="4" fill="#C2613F"/>
+  <!-- grab: big bold downward arrow -->
+  <path d="M55 44 H73 V68 H92 L64 100 L36 68 H55 Z" fill="#C2613F"/>
+</svg>

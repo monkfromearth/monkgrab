@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MonkGrab — Webpage to Markdown, in one click</title>
+<meta name="description" content="A Chrome extension that saves any webpage as clean Markdown — including content locked inside cross-origin iframes that other tools can't reach. 100% local, no tracking." />
+<meta property="og:title" content="MonkGrab — Webpage to Markdown" />
+<meta property="og:description" content="Save any page as clean Markdown, even content locked inside cross-origin iframes. One click. Fully local." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="../icons/icon32.png" />
+<style>
+  :root {
+    --bg: #f4ede2;
+    --bg-2: #ece2d3;
+    --ink: #2b2520;
+    --ink-soft: #6b6258;
+    --teal: #14b8a6;
+    --teal-deep: #0f8c80;
+    --line: #ddd0bd;
+    --card: #fbf7f0;
+    --radius: 14px;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--teal-deep); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 0 22px; }
+  code, pre, kbd { font-family: var(--mono); }
+  kbd {
+    background: var(--bg-2); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 6px; padding: 1px 7px; font-size: .8em; color: var(--ink);
+  }
+
+  /* Hero */
+  header.hero { padding: 64px 0 40px; text-align: center; }
+  .mark {
+    width: 76px; height: 76px; margin: 0 auto 22px; display: block;
+    border-radius: 20px; box-shadow: 0 8px 28px rgba(43,37,32,.14);
+  }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.02em; }
+  .tagline { font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--ink-soft); margin: 0 auto 28px; max-width: 560px; }
+  .tagline strong { color: var(--ink); }
+  .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 22px; border-radius: 10px; font-weight: 600;
+    border: 1px solid transparent; transition: transform .06s ease, box-shadow .2s ease;
+  }
+  .btn:hover { text-decoration: none; transform: translateY(-1px); }
+  .btn-primary { background: var(--teal); color: #fff; box-shadow: 0 6px 18px rgba(20,184,166,.35); }
+  .btn-primary:hover { background: var(--teal-deep); }
+  .btn-ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+  .badges { margin-top: 26px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; font-size: .8rem; color: var(--ink-soft); }
+  .pill { background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+
+  /* Sections */
+  section { padding: 30px 0; border-top: 1px solid var(--line); }
+  h2 { font-size: 1.5rem; margin: 0 0 14px; letter-spacing: -.01em; }
+  h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+  p { margin: 0 0 14px; }
+  .lead { color: var(--ink-soft); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 6px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 18px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 1rem; }
+  .card p { margin: 0; font-size: .92rem; color: var(--ink-soft); }
+
+  ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  ol.steps li {
+    counter-increment: s; position: relative; padding: 10px 0 10px 44px; border-bottom: 1px dashed var(--line);
+  }
+  ol.steps li:last-child { border-bottom: 0; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; left: 0; top: 9px;
+    width: 28px; height: 28px; border-radius: 8px; background: var(--teal); color: #fff;
+    font-weight: 700; font-size: .85rem; display: grid; place-items: center;
+  }
+
+  pre {
+    background: #2b2520; color: #f4ede2; border-radius: var(--radius); padding: 16px 18px;
+    overflow-x: auto; font-size: .85rem; line-height: 1.5; margin: 6px 0 0;
+  }
+  pre .c { color: #14b8a6; }
+  .note {
+    background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--teal);
+    border-radius: 8px; padding: 12px 16px; font-size: .92rem; color: var(--ink-soft);
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: 6px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--ink-soft); font-weight: 600; }
+  td code { background: var(--bg-2); padding: 1px 6px; border-radius: 5px; font-size: .88em; }
+
+  footer { padding: 36px 0 56px; text-align: center; color: var(--ink-soft); font-size: .9rem; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="mark" src="../icons/icon128.png" alt="MonkGrab icon" />
+    <h1>MonkGrab</h1>
+    <p class="tagline">Save any webpage as clean Markdown in one click — <strong>including content locked inside cross-origin iframes</strong> that other tools can't reach.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/monkfromearth/monkgrab">Get it on GitHub</a>
+      <a class="btn btn-ghost" href="#install">Install guide</a>
+    </div>
+    <div class="badges">
+      <span class="pill">Manifest V3</span>
+      <span class="pill">100% local · no tracking</span>
+      <span class="pill">MIT licensed</span>
+      <span class="pill">Chrome 102+</span>
+    </div>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <h2>Why it exists</h2>
+    <p class="lead">Browsers deliberately block one site from reading an iframe served by another domain. So embedded readers, course lessons, and docs viewers come out <strong>empty</strong> when you try to "save as Markdown." Copy-paste and bookmarklets hit the same wall.</p>
+    <p>MonkGrab sidesteps it the only way Chrome allows: it injects its converter into <strong>every frame</strong> of the page, so the code runs <em>inside</em> each frame's own origin where the cross-origin wall doesn't apply. It reads each frame's DOM, turns it into Markdown on the spot, keeps the main content, drops the ad and widget frames, and saves one <code>.md</code> file.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <h2>What you get</h2>
+    <div class="grid">
+      <div class="card"><h3>One click or one hotkey</h3><p><kbd>⌘</kbd><kbd>⇧</kbd><kbd>G</kbd> on Mac, <kbd>Ctrl</kbd><kbd>⇧</kbd><kbd>G</kbd> elsewhere. No popup, nothing to learn.</p></div>
+      <div class="card"><h3>Cross-origin iframes</h3><p>The content every other tool drops. The whole reason MonkGrab exists.</p></div>
+      <div class="card"><h3>Clean Markdown</h3><p>Headings, lists, bold/italic, links, images, inline &amp; block code, quotes, rules.</p></div>
+      <div class="card"><h3>Links that survive</h3><p>Relative links and images are resolved to full URLs, so they still work off-site.</p></div>
+      <div class="card"><h3>Smart frame ranking</h3><p>Keeps the real content, filters out nav, chrome, ads, and widgets.</p></div>
+      <div class="card"><h3>Fully local</h3><p>Conversion runs in your browser. No server, no network calls, nothing leaves your disk.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install</h2>
+    <ol class="steps">
+      <li>Download or clone the <a href="https://github.com/monkfromearth/monkgrab">repository</a>.</li>
+      <li>Open Chrome at <code>chrome://extensions</code>.</li>
+      <li>Toggle <strong>Developer mode</strong> ON (top-right).</li>
+      <li>Click <strong>Load unpacked</strong> and select the folder with <code>manifest.json</code>.</li>
+      <li>Pin the icon. Optionally set the hotkey at <code>chrome://extensions/shortcuts</code>.</li>
+    </ol>
+    <p style="margin-top:16px" class="lead">Works on Chrome 102+ and Chromium browsers with Manifest V3 (Edge, Brave, Arc, Opera).</p>
+  </div>
+</section>
+
+<section id="usage">
+  <div class="wrap">
+    <h2>Use it</h2>
+    <p>Open any page, then click the MonkGrab icon or press the hotkey. A teal <strong>✓</strong> flashes on success (a red <strong>!</strong> if something went wrong). The file lands at:</p>
+    <pre>Downloads/monkgrab/&lt;domain&gt;_&lt;slug&gt;_&lt;date&gt;_&lt;time&gt;.md</pre>
+    <h3>What the file looks like</h3>
+    <pre><span class="c"># Page Title</span>
+
+&gt; Source: https://example.com/the/page
+&gt; Captured: Sat Jun 20 2026 14:31:02 GMT+0530
+
+---
+
+...the page content as Markdown...</pre>
+  </div>
+</section>
+
+<section id="privacy">
+  <div class="wrap">
+    <h2>Permissions &amp; privacy</h2>
+    <p class="note"><strong>MonkGrab collects nothing and sends nothing anywhere.</strong> No analytics, no telemetry, no accounts, zero network requests. The Markdown is written straight to your Downloads folder and nowhere else. Full policy on <a href="https://github.com/monkfromearth/monkgrab/blob/main/PRIVACY.md">GitHub</a>.</p>
+    <table>
+      <tr><th>Permission</th><th>Why it's needed</th></tr>
+      <tr><td><code>&lt;all_urls&gt;</code></td><td>Read content inside cross-origin iframes — impossible with <code>activeTab</code> alone. Used only when you click or hotkey.</td></tr>
+      <tr><td><code>activeTab</code></td><td>Know which page you're on when you invoke it.</td></tr>
+      <tr><td><code>scripting</code></td><td>Run the DOM-to-Markdown converter inside each frame.</td></tr>
+      <tr><td><code>downloads</code></td><td>Write the <code>.md</code> file to your Downloads folder.</td></tr>
+    </table>
+    <p style="margin-top:14px" class="lead">The host permission is broad because the feature requires it — but it only ever runs on your explicit action, never on page load or in the background.</p>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lead">One Manifest V3 service worker. No content scripts, no popup, no remote code, no build step.</p>
+    <ol class="steps">
+      <li>A click or hotkey calls <code>grab()</code>.</li>
+      <li>It injects <code>extractFrame</code> into <strong>every frame</strong> via <code>chrome.scripting.executeScript({ allFrames: true })</code> — each runs in its own origin, defeating the cross-origin wall.</li>
+      <li>Each frame walks its DOM from the best content root (<code>main</code> → <code>article</code> → <code>body</code>) into Markdown, resolving relative URLs to absolute.</li>
+      <li>Frames are ranked by text length; the main one is kept and only substantial extra frames are appended (ads/widgets filtered out).</li>
+      <li>The Markdown is downloaded as a <code>data:</code> URL — the right approach since <code>createObjectURL</code> is unavailable in MV3 workers.</li>
+    </ol>
+    <p style="margin-top:16px">It's one heavily-commented file: <a href="https://github.com/monkfromearth/monkgrab/blob/main/background.js"><code>background.js</code></a>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Built by <a href="https://monkfrom.earth">monkfromearth</a> ·
+    <a href="https://github.com/monkfromearth/monkgrab">Source</a> ·
+    <a href="https://github.com/monkfromearth/monkgrab/blob/main/PRIVACY.md">Privacy</a> ·
+    MIT © 2026 Sameer Khan
+  </div>
+</footer>
+
+</body>
+</html>
