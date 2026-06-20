@@ -40,6 +40,29 @@ function extractFrame() {
     return out;
   }
 
+  // Render a <ul>/<ol> and its nested sub-lists as indented Markdown bullets.
+  // Robust to invalid markup (e.g. <ul><p><li>...</ul>): list membership is decided
+  // by each <li>'s nearest list ancestor, and a clone with nested lists stripped
+  // gives the item's own text, so nested items never collapse into their parent line.
+  function renderList(list, baseDepth) {
+    let out = "";
+    const counters = new Map();
+    list.querySelectorAll("li").forEach((li) => {
+      const owner = li.closest("ul,ol");
+      if (!owner || !list.contains(owner)) return;
+      let depthN = 0, a = owner;
+      while (a && a !== list) { if (a.tagName === "UL" || a.tagName === "OL") depthN++; a = a.parentElement; }
+      let mark;
+      if (owner.tagName === "OL") { const n = (counters.get(owner) || 0) + 1; counters.set(owner, n); mark = n + ". "; }
+      else mark = "- ";
+      const clone = li.cloneNode(true);
+      clone.querySelectorAll("ul,ol").forEach((n) => n.remove());
+      const line = inline(clone).replace(/\s+/g, " ").trim();
+      if (line) out += "  ".repeat(baseDepth + depthN) + mark + line + "\n";
+    });
+    return out;
+  }
+
   function block(node, depth) {
     let md = "";
     node.childNodes.forEach((c) => {
@@ -57,17 +80,10 @@ function extractFrame() {
         const t = inline(c).trim();
         if (t) md += t + "\n\n";
       } else if (tag === "UL" || tag === "OL") {
-        // Find list items by their nearest list ancestor, NOT as direct children.
-        // Some renderers emit invalid markup like <ul><p><li>...</li></p></ul>;
-        // the browser then reparents the <li>s so they are not direct children of
-        // the <ul>, and a direct-child scan would silently capture nothing.
-        let i = 1;
-        c.querySelectorAll("li").forEach((li) => {
-          if (li.closest("ul,ol") !== c) return; // belongs to a nested sub-list
-          const mark = tag === "OL" ? i++ + ". " : "- ";
-          md += "  ".repeat(depth) + mark + inline(li).trim() + "\n";
-        });
-        md += "\n";
+        // renderList walks descendant <li>s by nearest list ancestor (not direct
+        // children), so it survives invalid markup like <ul><p><li>...</ul> AND
+        // keeps nested sub-lists as properly indented sub-bullets.
+        md += renderList(c, depth) + "\n";
       } else if (tag === "PRE") {
         md += "```\n" + c.textContent.replace(/\n+$/, "") + "\n```\n\n";
       } else if (tag === "BLOCKQUOTE") {

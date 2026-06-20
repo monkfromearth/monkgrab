@@ -4,6 +4,16 @@ All notable changes to MonkGrab are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [SemVer](https://semver.org/).
 
+## [1.0.2] — 2026-06-20
+
+### Fixed
+- **Nested list items collapsed into their parent bullet.** Sub-bullets (e.g. a
+  scoring tier's individual points) were flattened onto one line, making sections
+  read as if content were missing. Lists now render with proper indentation at any
+  nesting depth via a dedicated `renderList` walker that keeps each item on its own
+  line — still robust to the invalid `<ul><p><li>` markup handled in 1.0.1.
+  Verified against real page markup: 143/143 rendered source lines captured, 0 dropped.
+
 ## [1.0.1] — 2026-06-20
 
 ### Fixed
