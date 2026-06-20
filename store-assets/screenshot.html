@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1280px;height:800px;overflow:hidden;font-family:Inter,system-ui,sans-serif}
+  body{
+    background:
+      radial-gradient(1100px 600px at 82% -10%, rgba(20,184,166,.10), transparent 60%),
+      radial-gradient(900px 600px at -8% 110%, rgba(194,97,63,.12), transparent 55%),
+      #f4ede2;
+    color:#2b2520; padding:64px 72px; position:relative;
+  }
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+  .brand img{width:52px;height:52px;border-radius:13px;box-shadow:0 6px 18px rgba(43,37,32,.16)}
+  .brand .name{font-weight:800;font-size:26px;letter-spacing:-.02em}
+  .brand .tag{margin-left:auto;font-size:13px;color:#6b6258;border:1px solid #ddd0bd;background:#fbf7f0;padding:6px 13px;border-radius:999px;font-weight:600}
+  h1{font-size:52px;line-height:1.05;letter-spacing:-.03em;font-weight:800;max-width:760px}
+  h1 .hl{color:#0f8c80}
+  .sub{margin-top:18px;font-size:21px;line-height:1.45;color:#6b6258;max-width:640px}
+  .sub b{color:#2b2520}
+  .chips{display:flex;gap:10px;margin-top:26px}
+  .chip{font-size:14px;font-weight:600;color:#2b2520;background:#fbf7f0;border:1px solid #ddd0bd;border-radius:10px;padding:9px 15px;display:flex;align-items:center;gap:7px}
+  .chip .dot{width:8px;height:8px;border-radius:50%;background:#14b8a6}
+  kbd{font-family:'JetBrains Mono',monospace;font-size:12px;background:#2b2520;color:#f4ede2;border-radius:5px;padding:2px 7px}
+
+  .stage{position:absolute;right:54px;bottom:54px;display:flex;align-items:center;gap:26px}
+  .card{background:#fbf7f0;border:1px solid #ddd0bd;border-radius:16px;box-shadow:0 22px 50px rgba(43,37,32,.16);overflow:hidden}
+  .win{width:300px}
+  .winbar{background:#ece2d3;padding:11px 14px;display:flex;gap:7px;align-items:center;border-bottom:1px solid #ddd0bd}
+  .winbar i{width:10px;height:10px;border-radius:50%;display:block}
+  .winbar .u{margin-left:10px;font-size:11px;color:#9a8f80;font-family:'JetBrains Mono',monospace}
+  .winbody{padding:18px}
+  .winbody .h{height:14px;border-radius:4px;background:#d9cab4;width:78%;margin-bottom:12px}
+  .winbody .l{height:8px;border-radius:4px;background:#e6dac8;margin-bottom:9px}
+  .iframe{border:2px dashed #C2613F;border-radius:9px;padding:12px;margin-top:14px;background:rgba(194,97,63,.06)}
+  .iframe .tagx{font-size:10px;font-weight:700;color:#C2613F;letter-spacing:.04em;margin-bottom:9px;font-family:'JetBrains Mono',monospace}
+  .iframe .l{background:#eccdb e}
+  .iframe .l{background:#e7d2c2}
+  .arrow{display:flex;flex-direction:column;align-items:center;gap:8px;color:#0f8c80}
+  .arrow .a{font-size:42px;font-weight:800;line-height:1}
+  .arrow .lab{font-size:12px;font-weight:700;color:#0f8c80;background:#d6efe c;background:#d3efe9;border-radius:999px;padding:5px 11px;white-space:nowrap}
+  .md{width:300px;font-family:'JetBrains Mono',monospace}
+  .mdbar{background:#2b2520;color:#f4ede2;padding:10px 14px;font-size:11px;display:flex;align-items:center;gap:8px}
+  .mdbar .fn{opacity:.85}
+  .mdbody{padding:16px 16px 18px;font-size:11.5px;line-height:1.7;color:#3b342c}
+  .mdbody .mh{color:#0f8c80;font-weight:600}
+  .mdbody .mq{color:#9a8f80}
+  .mdbody .mb{color:#C2613F;font-weight:600}
+</style></head>
+<body>
+  <div class="brand">
+    <img src="icon128.png" alt="">
+    <span class="name">MonkGrab</span>
+    <span class="tag">Chrome extension · MIT · no tracking</span>
+  </div>
+
+  <h1>Any webpage to <span class="hl">clean Markdown</span>, in one click.</h1>
+  <p class="sub">It even grabs content trapped inside <b>cross-origin iframes</b> that copy-paste and other tools can't reach.</p>
+
+  <div class="chips">
+    <span class="chip"><span class="dot"></span>One click or <kbd>⌘⇧G</kbd></span>
+    <span class="chip"><span class="dot"></span>100% local</span>
+    <span class="chip"><span class="dot"></span>No popup, no server</span>
+  </div>
+
+  <div class="stage">
+    <div class="card win">
+      <div class="winbar"><i style="background:#e06c5b"></i><i style="background:#e9b04e"></i><i style="background:#5bbf6a"></i><span class="u">example.com/article</span></div>
+      <div class="winbody">
+        <div class="h"></div>
+        <div class="l" style="width:96%"></div>
+        <div class="l" style="width:88%"></div>
+        <div class="l" style="width:70%"></div>
+        <div class="iframe">
+          <div class="tagx">◇ CROSS-ORIGIN IFRAME</div>
+          <div class="l" style="width:90%"></div>
+          <div class="l" style="width:80%"></div>
+          <div class="l" style="width:60%;margin-bottom:0"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow">
+      <div class="a">→</div>
+      <div class="lab">MonkGrab</div>
+    </div>
+
+    <div class="card md">
+      <div class="mdbar"><i></i><span class="fn">example.com_article_2026-06-20.md</span></div>
+      <div class="mdbody">
+        <span class="mh"># The Article Title</span><br>
+        <span class="mq">&gt; Source: example.com</span><br><br>
+        Clean paragraphs, <span class="mb">**bold**</span>, links,<br>
+        and lists, all as Markdown.<br><br>
+        <span class="mh">## From the iframe</span><br>
+        - the part other tools<br>
+        - leave completely empty<br>
+      </div>
+    </div>
+  </div>
+</body></html>
