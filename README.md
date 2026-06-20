@@ -134,8 +134,7 @@ MonkGrab collects nothing and transmits nothing. Full policy: **[PRIVACY.md](PRI
 
 | Permission | Why it's needed |
 |---|---|
-| `<all_urls>` host access | Read content inside **cross-origin iframes** — impossible with `activeTab` alone. Used only when you click/hotkey. |
-| `activeTab` | Know which page you're on when you invoke it. |
+| `<all_urls>` host access | Read content inside **cross-origin iframes** — impossible without it (`activeTab` can't reach cross-origin frames). Used only when you click/hotkey. |
 | `scripting` | Run the DOM→Markdown converter inside each frame. |
 | `downloads` | Write the `.md` file to your Downloads folder. |
 

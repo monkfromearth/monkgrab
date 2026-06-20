@@ -186,8 +186,7 @@
     <p class="note"><strong>MonkGrab collects nothing and sends nothing anywhere.</strong> No analytics, no telemetry, no accounts, zero network requests. The Markdown is written straight to your Downloads folder and nowhere else. Full policy on <a href="https://github.com/monkfromearth/monkgrab/blob/main/PRIVACY.md">GitHub</a>.</p>
     <table>
       <tr><th>Permission</th><th>Why it's needed</th></tr>
-      <tr><td><code>&lt;all_urls&gt;</code></td><td>Read content inside cross-origin iframes — impossible with <code>activeTab</code> alone. Used only when you click or hotkey.</td></tr>
-      <tr><td><code>activeTab</code></td><td>Know which page you're on when you invoke it.</td></tr>
+      <tr><td><code>&lt;all_urls&gt;</code></td><td>Read content inside cross-origin iframes — impossible without it (<code>activeTab</code> can't reach cross-origin frames). Used only when you click or hotkey.</td></tr>
       <tr><td><code>scripting</code></td><td>Run the DOM-to-Markdown converter inside each frame.</td></tr>
       <tr><td><code>downloads</code></td><td>Write the <code>.md</code> file to your Downloads folder.</td></tr>
     </table>

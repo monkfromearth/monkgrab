@@ -41,7 +41,6 @@ required, not optional, and here is exactly why:
 | Permission | Why it's needed |
 |---|---|
 | `<all_urls>` (host access) | Read content inside cross-origin iframes when you invoke MonkGrab. The reason the extension exists. |
-| `activeTab` | Identify the page you're currently on when you click. |
 | `scripting` | Run the DOM-to-Markdown converter inside each frame of that page. |
 | `downloads` | Save the resulting `.md` file to your Downloads folder. |
 

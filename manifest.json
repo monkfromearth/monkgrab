@@ -6,7 +6,7 @@
   "author": "monkfromearth",
   "homepage_url": "https://monkfrom.earth",
   "minimum_chrome_version": "102",
-  "permissions": ["activeTab", "scripting", "downloads"],
+  "permissions": ["scripting", "downloads"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js" },
   "icons": {
