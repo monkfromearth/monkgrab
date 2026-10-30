@@ -39,9 +39,12 @@ function extractFrame() {
   const SELECT_OPTIONS_LISTED = 15;
 
   // Private characters page text never contains, removed before the Markdown is returned:
-  // OPT starts every option line, so a group of options can sit on adjacent lines, and
+  // OPT_MARK starts every option line, so a group of options can sit on adjacent lines;
+  // LINK_MARK wraps every link and image, so the prose outside <main> is measured
+  // without them;
   // "\u0000N\u0000" holds verbatim text (<pre>, textareas) out of the whitespace clean-up.
-  const OPT = "\u0001";
+  const OPT_MARK = "\u0001";
+  const LINK_MARK = "\u0002";
 
   // ---- Walk state -------------------------------------------------------------
 
@@ -230,7 +233,7 @@ function extractFrame() {
     return squash(nodes.map((n) => textOf(n)).join(" "));
   }
 
-  // "(x) PASS" / "[ ] Optional", with the OPT mark in front. kind is "radio" or "check".
+  // "(x) PASS" / "[ ] Optional", with OPT_MARK in front. kind is "radio" or "check".
   function optionLine(el, kind) {
     done.add(el);
     const native = el.tagName.toUpperCase() === "INPUT";
@@ -249,7 +252,7 @@ function extractFrame() {
       s.checks++;
       if (st === "x") s.checked++;
     }
-    return OPT + (kind === "radio" ? "(" + st + ")" : "[" + st + "]") + (name ? " " + name : "");
+    return OPT_MARK + (kind === "radio" ? "(" + st + ")" : "[" + st + "]") + (name ? " " + name : "");
   }
 
   // A native field -> marker text. inl = inside a line of text (list item, paragraph).
@@ -322,12 +325,7 @@ function extractFrame() {
   function inline(node, skipLists) {
     let out = "";
     node.childNodes.forEach((c) => {
-      if (c.nodeType === 3) {
-        const t = c.textContent.replace(/\s+/g, " ");
-        out += t;
-        pass.prose += t.trim().length;
-        return;
-      }
+      if (c.nodeType === 3) { out += c.textContent.replace(/\s+/g, " "); return; }
       if (c.nodeType !== 1 || done.has(c)) return;
       // SVG and other non-HTML elements report a case-sensitive tagName; normalize.
       const t = c.tagName.toUpperCase();
@@ -338,17 +336,16 @@ function extractFrame() {
       if (t === "BR") out += "\n";
       else if (t === "STRONG" || t === "B") out += "**" + inline(c, skipLists).trim() + "**";
       else if (t === "EM" || t === "I") out += "*" + inline(c, skipLists).trim() + "*";
-      else if (t === "CODE") { out += "`" + c.textContent + "`"; pass.prose += c.textContent.length; }
+      else if (t === "CODE") out += "`" + c.textContent + "`";
       else if (t === "A") {
         const href = c.getAttribute("href") || "";
-        const before = pass.prose;
         const txt = inline(c, skipLists).trim();
-        if (href) pass.prose = before; // link text is not prose (menus are all links)
-        out += href ? `[${txt}](${abs(href)})` : txt;
+        // An image inside a link is part of the link: one LINK_MARK pair, not nested ones.
+        out += href ? LINK_MARK + `[${txt.split(LINK_MARK).join("")}](${abs(href)})` + LINK_MARK : txt;
       } else if (t === "IMG") {
         const src = c.getAttribute("src") || "";
         const alt = c.getAttribute("alt") || "";
-        out += src ? `![${alt}](${abs(src)})` : "";
+        out += src ? LINK_MARK + `![${alt}](${abs(src)})` + LINK_MARK : "";
       } else out += inline(c, skipLists);
     });
     return out;
@@ -381,7 +378,7 @@ function extractFrame() {
     node.childNodes.forEach((c) => {
       if (c.nodeType === 3) {
         const t = c.textContent.replace(/\s+/g, " ").trim();
-        if (t) { md += t + "\n\n"; pass.prose += t.length; }
+        if (t) md += t + "\n\n";
         return;
       }
       if (c.nodeType !== 1 || done.has(c)) return;
@@ -402,7 +399,6 @@ function extractFrame() {
         md += renderList(c, depth) + "\n";
       } else if (tag === "PRE") {
         md += stash(fence(c.textContent)) + "\n\n";
-        pass.prose += c.textContent.length;
       } else if (tag === "BLOCKQUOTE") {
         md += "> " + inline(c).trim().replace(/\n/g, "\n> ") + "\n\n";
       } else if (tag === "HR") {
@@ -416,22 +412,24 @@ function extractFrame() {
     return md;
   }
 
-  // One pass over root (skipping anything already done) -> Markdown, form stats,
-  // non-link text length, and how many text areas were filled in.
+  // One pass over root (skipping anything already done) -> Markdown, form stats, prose
+  // length (what was written, minus links, images and list/heading marks), and how many
+  // text areas were filled in.
   function render(root) {
     pass = {
-      tokens: [], groups: new Map(), prose: 0, filledAreas: 0,
+      tokens: [], groups: new Map(), filledAreas: 0,
       stats: { radios: 0, picked: 0, groups: 0, unpicked: 0, checks: 0, checked: 0, selects: 0, texts: 0, filled: 0 },
     };
     const lines = block(root, 0).replace(/\n{3,}/g, "\n\n").trim().split("\n");
     // Options of one group sit on adjacent lines, so the group reads as one block.
-    const isOpt = (l) => !!l && l.startsWith(OPT);
+    const isOpt = (l) => !!l && l.startsWith(OPT_MARK);
     const md = lines.filter((l, i) => !(l === "" && isOpt(lines[i - 1]) && isOpt(lines[i + 1])))
-      .join("\n").split(OPT).join("")
+      .join("\n").split(OPT_MARK).join("")
       .replace(/\u0000(\d+)\u0000/g, (_, i) => pass.tokens[+i]);
+    const prose = squash(md.replace(/\u0002[^\u0002]*\u0002/g, " ").replace(/^\s*(?:[-*]|\d+\.|#+)\s/gm, " ")).length;
     pass.stats.groups = pass.groups.size;
     pass.stats.unpicked = [...pass.groups.values()].filter((v) => !v).length;
-    return { md, stats: pass.stats, prose: pass.prose, filledAreas: pass.filledAreas };
+    return { md: md.split(LINK_MARK).join(""), stats: pass.stats, prose, filledAreas: pass.filledAreas };
   }
 
   // ---- Warnings ---------------------------------------------------------------

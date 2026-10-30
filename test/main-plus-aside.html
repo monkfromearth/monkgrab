@@ -22,8 +22,10 @@
   <p id="outside-text"></p>
 </aside>
 <script>
-  document.getElementById("outside-text").textContent =
-    "OUTSIDE-BLOCK-MARKER. " + "This sidebar holds real content that a main-only rule would throw away. ".repeat(30);
+  // Every word in its own <span>, spaces between them as separate text nodes: about
+  // 1,700 visible characters, but only about 1,420 if the spaces are not counted.
+  document.getElementById("outside-text").innerHTML = "<span>OUTSIDE-BLOCK-MARKER.</span> " +
+    Array.from({ length: 280 }, () => "<span>abcde</span>").join(" ");
 </script>
 </body>
 </html>
