@@ -81,6 +81,9 @@
   <label><input type="checkbox" id="cb_lint"><span>Ran the linter</span></label>
   <label><input type="checkbox" id="cb_some"><span>Some files reviewed</span></label>
   <div role="checkbox" aria-checked="false" id="cb_custom" tabindex="0">Custom checkbox</div>
+  <!-- Two-part name; the second part wraps a field whose value must not leak into it. -->
+  <input type="checkbox" id="cb_two" aria-labelledby="two_a two_b" checked>
+  <span id="two_a">Two-part</span> <span id="two_b">label <input type="text" value="LEAKED-INTO-NAME"></span>
   <button type="button" role="switch" aria-checked="false" id="sw" aria-labelledby="sw_label"><span class="sr-only">Toggle</span></button>
   <label id="sw_label" for="sw">Email alerts</label>
   <!-- Radix-style hidden mirror input: must NOT print a second checkbox. -->
@@ -118,7 +121,7 @@
   </div>
 
   <h2>Section 7: One-at-a-time carousel (only item 1 in the page)</h2>
-  <div class="pager">Currently viewing item <input type="number" value="1" aria-label="Item"> of 3</div>
+  <div class="pager">Currently viewing item <input type="number" value="1" aria-label="Item"><input type="password" value="PW-SHOULD-NOT-APPEAR" aria-label="Pin"> of 3</div>
   <div class="slide">Only item one is rendered here.</div>
 
   <h2>Section 8: Tabs and collapsed sections</h2>

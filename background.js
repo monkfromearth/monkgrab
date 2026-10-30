@@ -46,7 +46,10 @@ function extractFrame() {
       else if (c.nodeType === 1) {
         const t = c.tagName.toUpperCase();
         if (SKIP.has(t)) return;
-        if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") { if (vals) s += " " + c.value + " "; return; }
+        if (t === "INPUT" || t === "TEXTAREA" || t === "SELECT") {
+          if (vals && c.type !== "password" && c.type !== "hidden") s += " " + c.value + " ";
+          return;
+        }
         s += PHRASING.has(t) ? plainText(c, vals) : " " + plainText(c, vals) + " ";
       }
     });
@@ -146,7 +149,7 @@ function extractFrame() {
     let nodes = ids.map((id) => document.getElementById(id)).filter(Boolean);
     if (!nodes.length && el.labels) nodes = [...el.labels];
     nodes.forEach((n) => done.add(n));
-    return squash(nodes.map(textOf).join(" "));
+    return squash(nodes.map((n) => textOf(n)).join(" "));
   }
 
   // "(x) PASS" / "[ ] Optional". kind is "radio" or "check".
@@ -407,7 +410,7 @@ function extractFrame() {
       const tabs = [...list.querySelectorAll("[role=tab][aria-controls]")];
       const missing = tabs.filter((t) => !document.getElementById(t.getAttribute("aria-controls")));
       if (missing.length) {
-        out.add(`${missing.length} of ${tabs.length} tabs (${missing.map(textOf).join(", ")}) have no panel on the page; their content is missing below. Open each tab and grab again.`);
+        out.add(`${missing.length} of ${tabs.length} tabs (${missing.map((t) => textOf(t)).join(", ")}) have no panel on the page; their content is missing below. Open each tab and grab again.`);
       }
     });
     // Menus and pop-ups render on open too; only named sections in the content count.
@@ -415,7 +418,7 @@ function extractFrame() {
       .filter((b) => !document.getElementById(b.getAttribute("aria-controls")) && !b.hasAttribute("aria-haspopup") &&
         !b.closest("nav,header,footer,[role=navigation],[role=banner],[role=menu],[role=menubar]") && textOf(b));
     if (shut.length) {
-      out.add(`${shut.length} collapsed section(s) have no content on the page (${shut.slice(0, 5).map(textOf).join(", ")}); expand them and grab again.`);
+      out.add(`${shut.length} collapsed section(s) have no content on the page (${shut.slice(0, 5).map((b) => textOf(b)).join(", ")}); expand them and grab again.`);
     }
     return [...out];
   }

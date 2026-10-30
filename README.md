@@ -132,7 +132,7 @@ The saved file starts with a small header, then the content:
 On pages with form fields, two more header lines can appear:
 
 ```markdown
-> Form: 350 choice options in 96 groups (93 picked, 3 groups with no pick), 27 checkboxes and toggles (13 on), 1 dropdown, 43 text fields (39 filled)
+> Form: 350 choice options in 96 groups (93 picked, 3 groups with no pick), 27 checkboxes and toggles (13 on), 1 dropdown, 42 text fields (39 filled)
 > Warning: "Currently viewing item 1 of 9": this part of the page shows one item at a time, ...
 ```
 
