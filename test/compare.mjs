@@ -51,7 +51,7 @@ const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : [
 const ab = (...args) => execFileSync("agent-browser", args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024, timeout: 90000 });
 const norm = (l) => l.replace(/\s+/g, " ").trim();
 
-let i = 0;
+let i = 0, compared = 0;
 for (const url of PAGES) {
   i++;
   const slug = String(i).padStart(2, "0") + "-" + new URL(url).hostname.replace(/^www\./, "");
@@ -62,6 +62,7 @@ for (const url of PAGES) {
     let r = JSON.parse(ab("eval", js).trim());
     if (typeof r === "string") r = JSON.parse(r);
     fs.writeFileSync(path.join(outDir, slug + ".old.md"), r.old.md);
+    compared++;
     fs.writeFileSync(path.join(outDir, slug + ".new.md"), r.now.md);
     const oldLines = r.old.md.split("\n").map(norm).filter(Boolean);
     const newSet = new Set(r.now.md.split("\n").map(norm));
@@ -82,4 +83,6 @@ for (const url of PAGES) {
   }
 }
 try { execFileSync("agent-browser", ["close"], { stdio: "ignore" }); } catch (_) {}
-console.log(`\noutputs in ${outDir}`);
+console.log(`\ncompared ${compared} of ${PAGES.length} pages; outputs in ${outDir}`);
+// Sites that fail to load are skipped, but a run that compared nothing is a failure.
+if (!compared) process.exit(1);
