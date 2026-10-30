@@ -521,8 +521,9 @@ async function grab() {
     .join("");
 
   const dataUrl = "data:text/markdown;charset=utf-8;base64," + toBase64(body);
+  let id;
   try {
-    await chrome.downloads.download({
+    id = await chrome.downloads.download({
       url: dataUrl,
       filename: `monkgrab/${buildName(tab.url, title)}`,
       conflictAction: "uniquify",
@@ -531,14 +532,63 @@ async function grab() {
   } catch (e) {
     return { ok: false, msg: "Download failed: " + e.message };
   }
+  const error = await downloadError(id);
+  if (error) return { ok: false, msg: "Download failed: " + (DOWNLOAD_ERRORS[error] || error) + ` (${error})` };
   return { ok: true, msg: `Downloaded .md (${frames.length} frame(s), ${best.len} chars).` };
 }
 
-// Brief badge feedback since there's no popup: ✓ on success, ! on failure.
+const DOWNLOAD_ERRORS = {
+  FILE_ACCESS_DENIED: "Chrome can't write to the downloads folder. Check Settings > Downloads > Location, and that the folder exists and is writable",
+  FILE_NO_SPACE: "the disk is full",
+  FILE_NAME_TOO_LONG: "the file name is too long for this disk",
+  FILE_TOO_LARGE: "the file is too large for this disk",
+  FILE_BLOCKED: "downloads are blocked by Chrome settings or a policy",
+  FILE_VIRUS_INFECTED: "the virus scanner blocked the file",
+  FILE_SECURITY_CHECK_FAILED: "a security check blocked the file",
+  FILE_FAILED: "Chrome could not save the file",
+  // Also what Chrome reports when the downloads folder is missing or read-only.
+  USER_CANCELED: "Chrome cancelled the save. Check that the downloads folder in Settings > Downloads > Location exists and is writable",
+};
+
+// chrome.downloads.download() resolves once the download STARTS. A folder Chrome can't
+// write to, a full disk or a policy block only shows up after that, as an "interrupted"
+// state. Wait for the end state so a failed save is never reported as a success.
+// Returns null when the file was written, else Chrome's error code.
+function downloadError(id, ms = 15000) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      chrome.downloads.onChanged.removeListener(onChanged);
+      resolve(err);
+    };
+    const check = (state, error) => {
+      if (state === "complete") finish(null);
+      else if (state === "interrupted") finish(error || "FILE_FAILED");
+    };
+    const onChanged = (d) => {
+      if (d.id === id && d.state) check(d.state.current, d.error && d.error.current);
+    };
+    // A save still running after 15 s is slow, not failed: report success, as before.
+    const timer = setTimeout(() => finish(null), ms);
+    chrome.downloads.onChanged.addListener(onChanged);
+    // It may already be over before the listener was added.
+    chrome.downloads.search({ id }).then(([item]) => item && check(item.state, item.error), () => {});
+  });
+}
+
+const DEFAULT_TITLE = (chrome.runtime && chrome.runtime.getManifest().action.default_title) || "MonkGrab";
+
+// Badge feedback since there's no popup: ✓ for 2 s on success. On failure the ! stays,
+// and hovering the icon shows the reason, until the next grab.
 async function flash(res) {
+  if (!res.ok) console.error("MonkGrab:", res.msg);
   await chrome.action.setBadgeBackgroundColor({ color: res.ok ? "#14b8a6" : "#dc2626" });
   await chrome.action.setBadgeText({ text: res.ok ? "✓" : "!" });
-  setTimeout(() => chrome.action.setBadgeText({ text: "" }), 2000);
+  await chrome.action.setTitle({ title: res.ok ? DEFAULT_TITLE : "MonkGrab could not save this page. " + res.msg });
+  if (res.ok) setTimeout(() => chrome.action.setBadgeText({ text: "" }), 2000);
 }
 
 // Click the toolbar icon -> grab + download immediately.
