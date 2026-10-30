@@ -33,13 +33,15 @@ MonkGrab 1.1.0. Full release notes: [CHANGELOG.md](../CHANGELOG.md#110---2026-10
   what counts as page clutter (`isNoise`, `isUiField`), and option detection is split
   into strong signals (count anywhere) and weak signals (count only inside a form).
 - Option lines carry a private mark, so a plain paragraph that starts with "(x)" is no
-  longer glued to its neighbour. Text outside `<main>` is measured on the page, not by
-  re-parsing the Markdown.
+  longer glued to its neighbour. Links and images are marked as they are written, so the
+  prose outside `<main>` is measured without guessing where a link starts and ends.
 - Two bugs found by the review and fixed: a checkbox in `<main>` labelled from outside it
   printed twice and was counted twice; paragraphs starting with "(x)" / "( )" lost their
   blank line.
+- Re-review found one more: words in separate `<span>`s were measured without the
+  spaces between them. Fixed and pinned (main-plus-aside.html).
 - Proof the restructure changed nothing else: snapshot diff on the 4 test pages (only the
-  2 bug fixes changed) and byte-identical output on 14 live sites, before vs after.
+  2 bug fixes changed) and byte-identical output on 13 to 14 live sites, before vs after.
 
 ## Tests
 - CodeRabbit CLI: 2 findings on earlier commits, both fixed.
