@@ -76,6 +76,18 @@
     <button type="button" aria-pressed="false" id="v_carousel">Carousel</button>
   </div>
 
+  <h2>Section 2b: Other custom signals</h2>
+  <p>Side (aria-selected buttons)</p>
+  <div><button type="button" aria-selected="false">Left</button><button type="button" aria-selected="true">Right</button></div>
+  <p>Format (data-state on/off)</p>
+  <div><button type="button" data-state="on">Bold</button><button type="button" data-state="off">Italic</button></div>
+  <p>Size (data-checked in a radiogroup)</p>
+  <div role="radiogroup"><div data-checked="false">Small</div><div data-checked="true">Large</div></div>
+  <p>Mode (tabs marked by data-state only)</p>
+  <div role="tablist"><div role="tab" data-state="active">Edit</div><div role="tab" data-state="inactive">Preview</div></div>
+  <p>Fruit (listbox options marked by data-selected)</p>
+  <div role="listbox"><div role="option" data-selected="true">Apple</div><div role="option">Pear</div></div>
+
   <h2>Section 3: Checkboxes and switches</h2>
   <label><input type="checkbox" id="cb_tests" checked><span>Ran the tests</span></label>
   <label><input type="checkbox" id="cb_lint"><span>Ran the linter</span></label>

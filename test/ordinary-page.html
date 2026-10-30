@@ -12,7 +12,7 @@
   one on this page: the output must match 1.0.1 line for line, plus the article's own
   header, which 1.0.1 dropped.
 -->
-<header class="site">
+<header class="site" data-expect-skip>
   <a href="/">Home</a>
   <nav><a href="/news">News</a> <a href="/about">About</a></nav>
   <form role="search"><input type="search" name="q" placeholder="Search"></form>
@@ -59,6 +59,8 @@ const b = 2;</pre>
       <li>List item one</li>
       <li>List item two</li>
     </ul>
+    <p>(x) marks the spot on the old map.</p>
+    <p>( ) is how a blank answer box looks in plain text.</p>
     <p>LAST-PARAGRAPH-MARKER.</p>
   </article>
 </main>

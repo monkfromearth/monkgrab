@@ -13,9 +13,12 @@
 <main>
   <h1>Article title</h1>
   <p>MAIN-CONTENT-MARKER. This is the main article body.</p>
+  <input type="checkbox" id="kept" checked>
 </main>
 <aside id="outside">
   <h2>Large block outside main</h2>
+  <!-- The checkbox above is named by this label: it must print once, with its box. -->
+  <label for="kept">Label kept in the aside</label>
   <p id="outside-text"></p>
 </aside>
 <script>

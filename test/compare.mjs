@@ -17,17 +17,15 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { currentConverter, converterAt, withExtract } from "./source.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const repo = path.resolve(here, "..");
 const base = process.env.BASE || "b837001"; // last 1.0.1 commit
 const outDir = process.env.OUT || fs.mkdtempSync(path.join(os.tmpdir(), "monkgrab-compare-"));
 fs.mkdirSync(outDir, { recursive: true });
 
-const grabFn = (src) => src.match(/^function extractFrame\(\) \{[\s\S]*?^\}$/m)[0];
-const oldSrc = grabFn(execFileSync("git", ["show", `${base}:background.js`], { cwd: repo, encoding: "utf8" }));
-const newSrc = grabFn(fs.readFileSync(path.join(repo, "background.js"), "utf8"));
+const oldSrc = converterAt(base);
+if (!oldSrc) { console.error(`No converter at ${base} (is git history available?)`); process.exit(2); }
+const newSrc = currentConverter();
 
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : [
   "https://en.wikipedia.org/wiki/Markdown",
@@ -58,7 +56,7 @@ for (const url of PAGES) {
   try {
     ab("open", url);
     try { ab("wait", "1500"); } catch (_) {}
-    const js = `JSON.stringify({ old: (${oldSrc})(), now: (${newSrc})() })`;
+    const js = `JSON.stringify({ old: ${withExtract(oldSrc, "extractFrame()")}, now: ${withExtract(newSrc, "extractFrame()")} })`;
     let r = JSON.parse(ab("eval", js).trim());
     if (typeof r === "string") r = JSON.parse(r);
     fs.writeFileSync(path.join(outDir, slug + ".old.md"), r.old.md);

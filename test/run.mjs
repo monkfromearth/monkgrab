@@ -2,7 +2,7 @@
 // MonkGrab test runner.
 //
 // 1. Opens each page in headless Chrome (via the agent-browser CLI) and runs the real
-//    extractFrame() from background.js inside it, plus a "truth" probe that reads the
+//    extractFrame() from extract.js inside it, plus a "truth" probe that reads the
 //    live state of every native radio, checkbox, select and textarea.
 // 2. Runs the real grab() from background.js in a Node sandbox with a fake chrome API,
 //    so frame selection, the header and the base64 download are tested too.
@@ -19,30 +19,23 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
+import { root, currentConverter, converterAt, withExtract } from "./source.mjs";
 
-const here = path.dirname(fileURLToPath(import.meta.url));
-const src = fs.readFileSync(path.join(here, "..", "background.js"), "utf8");
-const fnOf = (code) => code.match(/^function extractFrame\(\) \{[\s\S]*?^\}$/m)[0];
-const extractSrc = fnOf(src);
+const here = path.join(root, "test");
+const src = fs.readFileSync(path.join(root, "background.js"), "utf8");
 // The 1.0.1 converter, for the "ordinary pages are unchanged" check.
 const BASE = process.env.BASE || "b837001";
-let baseSrc = null;
-try { baseSrc = fnOf(execFileSync("git", ["show", `${BASE}:background.js`], { cwd: path.join(here, ".."), encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })); } catch (_) {}
+const baseSrc = converterAt(BASE);
 const outDir = process.env.OUT || "";
 if (outDir) fs.mkdirSync(outDir, { recursive: true });
 
 // Live state of native controls, read in the page. Used to cross-check the output.
 function liveTruth() {
   const sq = (s) => (s || "").replace(/\s+/g, "");
-  // Skip mirror inputs and site chrome (every nav, page-level header/footer), which the
-  // converter leaves out on purpose.
-  const chrome = (el) => {
-    if (el.closest("nav")) return true;
-    const h = el.closest("header,footer");
-    return !!h && !(h.parentElement && h.parentElement.closest("article,form,dialog,[role=dialog]"));
-  };
-  const real = (el) => el.getAttribute("aria-hidden") !== "true" && !chrome(el);
+  // Hidden mirror inputs duplicate a custom widget. Test pages mark page UI the converter
+  // must leave out with data-expect-skip, so this check never copies the converter's rules.
+  const real = (el) => el.getAttribute("aria-hidden") !== "true" && !el.closest("[data-expect-skip]");
   const lbl = (el) => (el.labels && el.labels[0] ? sq(el.labels[0].textContent) : null);
   return {
     radios: [...document.querySelectorAll("input[type=radio]")].filter(real).map((r) => ({ st: r.checked ? "x" : " ", label: lbl(r) })),
@@ -59,8 +52,8 @@ function liveTruth() {
 function browserRun(file) {
   const ab = (...args) => execFileSync("agent-browser", args, { encoding: "utf8", maxBuffer: 512 * 1024 * 1024 });
   ab("open", pathToFileURL(file).href);
-  const old = baseSrc ? `(${baseSrc})()` : "null";
-  const js = `JSON.stringify({ frame: (${extractSrc})(), truth: (${liveTruth.toString()})(), old: ${old}, url: location.href, title: document.title })`;
+  const old = baseSrc ? withExtract(baseSrc, "extractFrame()") : "null";
+  const js = `JSON.stringify({ frame: ${withExtract(currentConverter(), "extractFrame()")}, truth: (${liveTruth.toString()})(), old: ${old}, url: location.href, title: document.title })`;
   const t0 = Date.now();
   let out = JSON.parse(ab("eval", js).trim());
   if (typeof out === "string") out = JSON.parse(out);
@@ -96,9 +89,10 @@ function sandbox(frames, url, title, endState = "complete") {
       setTitle: async (o) => { box.title = o.title; },
     },
     commands: { onCommand: noop },
-    runtime: { getManifest: () => JSON.parse(fs.readFileSync(path.join(here, "..", "manifest.json"), "utf8")) },
+    runtime: { getManifest: () => JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8")) },
   };
   box.ctx = vm.createContext({ chrome, TextEncoder, btoa, URL, Date, console: { ...console, error() {} }, setTimeout, clearTimeout });
+  box.ctx.importScripts = (...files) => files.forEach((f) => vm.runInContext(fs.readFileSync(path.join(root, f), "utf8"), box.ctx));
   vm.runInContext(src, box.ctx);
   return box;
 }
@@ -185,6 +179,8 @@ const EXPECT = {
       "- [x] Task-list item done", "- [ ] Task-list item open",
       "(x) Overview", "( ) Details", "( ) History",
       "( ) Rating low", "(x) Rating high",
+      "( ) Left", "(x) Right", "[x] Bold", "[ ] Italic", "( ) Small", "(x) Large",
+      "(x) Edit", "( ) Preview", "(x) Apple", "( ) Pear",
     ],
     has: [
       "Read the two trajectories, then rate each dimension. The instructions block must survive.",
@@ -194,7 +190,7 @@ const EXPECT = {
       "Optional note\n\nValue: (empty)",
       '> Warning: "Currently viewing item 1 of 3"',
       "> Warning: 1 of 3 tabs (History) have no panel on the page",
-      "> Form: 20 choice options in 8 groups (7 picked, 1 group with no pick), 11 checkboxes and toggles (6 on), 2 dropdowns, 6 text fields (5 filled)",
+      "> Form: 26 choice options in 11 groups (10 picked, 1 group with no pick), 13 checkboxes and toggles (7 on), 2 dropdowns, 6 text fields (5 filled)",
       "\n````\nTrajectory A is stronger.\n\nThe agent read",
       "```py\nretry(3)\n```\n\nEND-OF-REVIEW\n````",
     ],
@@ -203,16 +199,16 @@ const EXPECT = {
   },
   "ordinary-page.html": {
     lines: ["## Daily Paper", "# Article title from the article header", "- List item two"],
-    has: ["ARTICLE-BODY-MARKER", "LAST-PARAGRAPH-MARKER", "\nHot\n", "```\nconst a = 1;\n\nconst b = 2;\n```"],
-    not: ["> Form:", "> Warning:", "Value:", "(x)", "[x]", "[ ]", "( )", "Search", "Menu", "Section A", "Subscribe",
+    has: ["ARTICLE-BODY-MARKER", "LAST-PARAGRAPH-MARKER", "\nHot\n", "spot on the old map.\n\n( ) is how","```\nconst a = 1;\n\nconst b = 2;\n```"],
+    not: ["> Form:", "> Warning:", "Value:", "[x]", "[ ]", "Search", "Menu", "Section A", "Subscribe",
       "newsletter", "comment", "Like", "Follow", "Bookmark", "Another story", "outside the main content", "Footer text"],
     // Same as 1.0.1, except the article's own <header>, which 1.0.1 dropped.
     sameAsBase: ["# Article title from the article header", "By Doc, 30 October 2026"],
   },
   "main-plus-aside.html": {
-    lines: ["# Article title"],
-    has: ["MAIN-CONTENT-MARKER", "OUTSIDE-BLOCK-MARKER", "<!-- outside the main content -->"],
-    not: ["> Form:"],
+    lines: ["# Article title", "[x] Label kept in the aside"],
+    has: ["MAIN-CONTENT-MARKER", "OUTSIDE-BLOCK-MARKER", "<!-- outside the main content -->", "> Form: 1 checkbox or toggle (1 on)\n"],
+    once: ["Label kept in the aside"],
   },
 };
 
@@ -220,7 +216,9 @@ async function testPage(file) {
   const name = path.basename(file);
   console.log(`\n${name}`);
   const run = browserRun(file);
-  const { md } = await sandboxGrab([run.frame], run.url, run.title);
+  let md;
+  try { ({ md } = await sandboxGrab([run.frame], run.url, run.title)); }
+  catch (e) { check("grab() saved a file", false, e.message); return; }
   if (outDir) fs.writeFileSync(path.join(outDir, name.replace(/\.html?$/, "") + ".md"), md);
   console.log(`  ${md.length} chars of Markdown, extract took ${run.ms} ms`);
   const exp = EXPECT[name];
@@ -235,12 +233,13 @@ async function testPage(file) {
     check(`${(exp.once || []).length} labels printed exactly once`, !badOnce.length, badOnce.join(" | "));
     if (exp.sameAsBase && !run.old) console.log(`  SKIP  same-as-${BASE} check (git history not available)`);
     else if (exp.sameAsBase) {
-      const lines = (t) => t.split("\n").map((l) => l.trim()).filter(Boolean);
-      const now = lines(run.frame.md), before = lines(run.old.md);
-      const lost = before.filter((l) => !now.includes(l));
-      const added = now.filter((l) => !before.includes(l) && !exp.sameAsBase.includes(l));
-      check(`output matches ${BASE} (1.0.1) apart from ${exp.sameAsBase.length} expected new lines`, !lost.length && !added.length,
-        [...lost.map((l) => "lost: " + l), ...added.map((l) => "added: " + l)].join(" | "));
+      // Exact, blank lines included: drop the expected new lines, then compare.
+      const now = run.frame.md.split("\n").filter((l) => !exp.sameAsBase.includes(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+      const a = now.split("\n"), b = run.old.md.trim().split("\n");
+      const i = a.findIndex((l, k) => l !== b[k]);
+      const at = i < 0 && a.length !== b.length ? Math.min(a.length, b.length) : i;
+      check(`output matches ${BASE} (1.0.1) exactly, apart from ${exp.sameAsBase.length} expected new lines`, at < 0,
+        `first difference at line ${at + 1}: now ${JSON.stringify(a[at])}, 1.0.1 ${JSON.stringify(b[at])}`);
     }
   }
   crossCheck(md, run.truth);
