@@ -25,10 +25,27 @@ MonkGrab 1.1.0. Full release notes: [CHANGELOG.md](../CHANGELOG.md#110---2026-10
 ## Unchanged
 - Ordinary pages (articles, docs, blogs) come out as in 1.0.1, apart from the fixes above.
 
+## Code quality (strict review, then restructure)
+- The converter moved to `extract.js` (loaded with `importScripts`), so `background.js`
+  is only the service worker (167 lines) and the tests read the converter directly
+  instead of cutting it out with a regex.
+- One place decides what a label, field or option prints (`formText`), one place decides
+  what counts as page clutter (`isNoise`, `isUiField`), and option detection is split
+  into strong signals (count anywhere) and weak signals (count only inside a form).
+- Option lines carry a private mark, so a plain paragraph that starts with "(x)" is no
+  longer glued to its neighbour. Text outside `<main>` is measured on the page, not by
+  re-parsing the Markdown.
+- Two bugs found by the review and fixed: a checkbox in `<main>` labelled from outside it
+  printed twice and was counted twice; paragraphs starting with "(x)" / "( )" lost their
+  blank line.
+- Proof the restructure changed nothing else: snapshot diff on the 4 test pages (only the
+  2 bug fixes changed) and byte-identical output on 14 live sites, before vs after.
+
 ## Tests
-- CodeRabbit CLI review of the branch: 0 findings.
-- `node test/run.mjs`: 38 checks pass on the bundled pages (form state, ordinary page
-  vs 1.0.1, main content, frame selection, download errors). With the saved DA STA-4
+- CodeRabbit CLI: 2 findings on earlier commits, both fixed.
+- `node test/run.mjs`: 38 checks pass on the bundled pages (form state with every
+  custom-option signal, ordinary page vs 1.0.1 exactly with blank lines, main content
+  with a label outside it, frame selection, download errors). With the saved DA STA-4
   page added: 42 pass (350 radios, 20 checkboxes, 1 select, 38 filled textareas, all
   matching the page's live state).
 - `test/e2e.mjs` in Chrome for Testing 1208 with the unpacked extension: 2 of 2 pass

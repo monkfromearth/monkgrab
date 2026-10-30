@@ -179,8 +179,9 @@ no remote code, no build step required to run it.
    (hotkey) both call `grab()`.
 2. **Inject everywhere.** `grab()` finds the active tab and calls
    `chrome.scripting.executeScript({ target: { tabId, allFrames: true }, func: extractFrame })`.
-   `extractFrame` is serialized and run independently inside **every frame** of the tab,
-   each in its own origin; this is what defeats the cross-origin wall.
+   `extractFrame` (in `extract.js`, loaded with `importScripts`) is serialized and run
+   independently inside **every frame** of the tab, each in its own origin; this is what
+   defeats the cross-origin wall.
 3. **DOM → Markdown.** Inside each frame, `extractFrame` picks a root: `main` →
    `[role=main]` → `article` → `body`. Anything outside that root with 1,500+ characters
    of prose (link text doesn't count, so menus don't qualify) or a filled-in text area is
@@ -205,14 +206,17 @@ no remote code, no build step required to run it.
    before it answers. Success flashes `✓` for 2s; a failure keeps `!` on the icon and puts
    the reason in its tooltip (`chrome.action.setTitle`) until the next grab.
 
-Everything lives in [`background.js`](background.js) and is heavily commented. There is
-no transpilation, bundler, or dependency; it's plain ES that Chrome runs directly.
+The code is two commented files: [`extract.js`](extract.js), the converter that runs in
+each frame, and [`background.js`](background.js), the service worker that injects it,
+picks frames and downloads the file. There is no transpilation, bundler, or dependency;
+it's plain ES that Chrome runs directly.
 
 ## Project layout
 
 ```
 manifest.json     Extension config (Manifest V3)
-background.js     Service worker: inject-all-frames + DOM→Markdown + download
+background.js     Service worker: inject into every frame, pick frames, download, badge
+extract.js        The converter (DOM → Markdown + form state), run inside each frame
 icons/            Toolbar / store icons (16, 32, 48, 128 + source SVG)
 PRIVACY.md        Privacy policy (no data collection)
 CHANGELOG.md      Version history
@@ -277,8 +281,8 @@ CHROME="/path/to/Chrome for Testing" node --experimental-websocket test/e2e.mjs
 
 ## Contributing
 
-Issues and PRs welcome. The codebase is intentionally a single dependency-free file. Keep changes plain ES, keep the service worker the only moving part, and don't add a
-build step for the runtime. Run `node --check background.js` and `node test/run.mjs` before pushing.
+Issues and PRs welcome. The codebase is intentionally two dependency-free files. Keep changes plain ES, keep `extractFrame` self-contained (Chrome serializes it into each frame), and don't add a
+build step for the runtime. Run `node test/run.mjs` before pushing, and `node test/compare.mjs` before a release.
 
 ## License
 

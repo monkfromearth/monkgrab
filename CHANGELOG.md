@@ -66,6 +66,8 @@ All notable changes to MonkGrab are documented here. Format loosely follows
 ### Changed
 - The download is a base64 `data:` URL (about 1.33x the text, where percent-encoding
   was up to 3x), so large captures stay under Chrome's 2 MB URL limit.
+- The converter moved from `background.js` to `extract.js`, which the service worker
+  loads with `importScripts`. The tests read it directly. The Web Store zip includes it.
 
 ## [1.0.1] - 2026-06-20
 
