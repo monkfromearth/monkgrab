@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonkGrab ordinary-page test page</title>
+</head>
+<body>
+<!--
+  An ordinary article page: no task form, just the page furniture most sites have
+  (search boxes, menu toggles, Like buttons, code tabs, a newsletter box, a link
+  sidebar). test/run.mjs runs the 1.0.1 converter and the current one on this page:
+  the output must match 1.0.1 line for line, plus the article's own header, which
+  1.0.1 dropped.
+-->
+<header class="site">
+  <a href="/">Home</a>
+  <nav><a href="/news">News</a> <a href="/about">About</a></nav>
+  <form role="search"><input type="search" name="q" placeholder="Search"></form>
+  <input type="checkbox" id="menu-toggle"><label for="menu-toggle">Menu</label>
+  <button aria-expanded="false" aria-controls="account-menu" aria-haspopup="menu">Account</button>
+</header>
+
+<main>
+  <h2 class="logo"><svg role="img" viewBox="0 0 10 10"><title>Daily Paper</title><path d="M0 0h10v10H0z"/></svg></h2>
+  <article>
+    <header>
+      <h1>Article title from the article header</h1>
+      <p>By Doc, 30 October 2026</p>
+    </header>
+    <nav class="toc"><a href="#a">Section A</a> <a href="#b">Section B</a></nav>
+    <p>ARTICLE-BODY-MARKER. The first paragraph of the article, with a <a href="/link">link</a> and <strong>bold</strong> text.</p>
+    <div class="pills">
+      <a class="pill active" href="/hot">Hot</a>
+      <a class="pill" href="/new">New</a>
+    </div>
+    <div role="tablist">
+      <button role="tab" aria-selected="true">App.js</button>
+      <button role="tab" aria-selected="false">styles.css</button>
+    </div>
+    <pre>const a = 1;
+
+const b = 2;</pre>
+    <div class="actions">
+      <button type="button" aria-pressed="false">Like</button>
+      <button type="button" aria-pressed="true">Follow</button>
+      <button type="button" data-state="off">Bookmark</button>
+    </div>
+    <input type="text" placeholder="Search docs">
+    <form class="newsletter">
+      <p>Get the newsletter.</p>
+      <label>Email address <input type="email" name="email"></label>
+      <button>Subscribe</button>
+    </form>
+    <ul>
+      <li>List item one</li>
+      <li>List item two</li>
+    </ul>
+    <p>LAST-PARAGRAPH-MARKER.</p>
+  </article>
+</main>
+
+<aside class="sidebar" id="sidebar">
+  <h3>More from us</h3>
+  <ul id="more"></ul>
+</aside>
+
+<footer>Footer text that every version drops.</footer>
+
+<script>
+  // A long link list outside <main>: menus like this are not appended.
+  const ul = document.getElementById("more");
+  for (let i = 1; i <= 40; i++) {
+    const li = document.createElement("li");
+    li.innerHTML = `<a href="/story/${i}">Another story headline from the archive, number ${i}</a>`;
+    ul.appendChild(li);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonkGrab form-state test page</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 760px; margin: 24px auto; }
+  .opt, .choice { display: inline-block; padding: 4px 10px; border: 1px solid #ccc; }
+  .selected, .is-active { background: #14b8a6; color: #fff; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<!--
+  Every control below is changed by the script at the bottom AFTER parse, so the HTML
+  attribute and the live DOM state disagree. MonkGrab must report the live state.
+  test/run.mjs holds the expected output lines.
+-->
+<nav><a href="/">Home</a> <a href="/projects">Projects</a></nav>
+
+<!-- Like DataAnnotation: the whole task sits inside one <form>. -->
+<form id="task" action="/submit" method="post">
+  <h1>Instructions</h1>
+  <p>Read the two trajectories, then rate each dimension. The instructions block must survive.</p>
+
+  <h2>Section 1: Plain radios</h2>
+  <fieldset>
+    <legend>Trajectory A correctness</legend>
+    <label><input type="radio" name="corr_a" value="pass" checked><span>PASS</span></label>
+    <label><input type="radio" name="corr_a" value="partial"><span>PARTIAL</span></label>
+    <label><input type="radio" name="corr_a" value="fail" id="corr_a_fail"><span>FAIL</span></label>
+  </fieldset>
+
+  <p>Importance</p>
+  <div>
+    <label for="imp_must">Must have</label><input type="radio" name="importance" id="imp_must" checked>
+    <label for="imp_nice">Nice to have</label><input type="radio" name="importance" id="imp_nice">
+  </div>
+
+  <p>Unanswered group</p>
+  <label><input type="radio" name="unanswered"><span>Left blank A</span></label>
+  <label><input type="radio" name="unanswered"><span>Left blank B</span></label>
+
+  <h2>Section 2: Custom radios</h2>
+  <p>Trajectory B quality (aria-checked)</p>
+  <div role="radiogroup" aria-label="Trajectory B quality">
+    <div role="radio" aria-checked="true" id="q_good" tabindex="0">Good</div>
+    <div role="radio" aria-checked="false" id="q_ok" tabindex="-1">Okay</div>
+    <div role="radio" aria-checked="false" id="q_bad" tabindex="-1">Bad</div>
+  </div>
+
+  <p>Score (data-state, Radix style)</p>
+  <div role="radiogroup">
+    <button type="button" data-state="unchecked" id="s1">1</button>
+    <button type="button" data-state="checked" id="s2">2</button>
+    <button type="button" data-state="unchecked" id="s3">3</button>
+  </div>
+
+  <p>Severity (class only)</p>
+  <div>
+    <div class="opt">Low</div>
+    <div class="opt selected" id="sev_med">Medium</div>
+    <div class="opt" id="sev_high">High</div>
+  </div>
+
+  <p>Agree (role=radio, state class on the wrapper)</p>
+  <div>
+    <div class="choice"><span role="radio" id="agree_yes">Yes</span></div>
+    <div class="choice"><span role="radio" id="agree_no">No</span></div>
+  </div>
+
+  <p>View (aria-pressed toggle buttons)</p>
+  <div>
+    <button type="button" aria-pressed="false" id="v_list">List</button>
+    <button type="button" aria-pressed="true" id="v_table">Table</button>
+    <button type="button" aria-pressed="false" id="v_carousel">Carousel</button>
+  </div>
+
+  <h2>Section 3: Checkboxes and switches</h2>
+  <label><input type="checkbox" id="cb_tests" checked><span>Ran the tests</span></label>
+  <label><input type="checkbox" id="cb_lint"><span>Ran the linter</span></label>
+  <label><input type="checkbox" id="cb_some"><span>Some files reviewed</span></label>
+  <div role="checkbox" aria-checked="false" id="cb_custom" tabindex="0">Custom checkbox</div>
+  <button type="button" role="switch" aria-checked="false" id="sw" aria-labelledby="sw_label"><span class="sr-only">Toggle</span></button>
+  <label id="sw_label" for="sw">Email alerts</label>
+  <!-- Radix-style hidden mirror input: must NOT print a second checkbox. -->
+  <input type="checkbox" aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0" checked>
+
+  <h2>Section 4: Selects</h2>
+  <label for="grade">Overall grade</label>
+  <select id="grade">
+    <option>Low</option>
+    <option selected>Medium</option>
+    <option>High</option>
+  </select>
+  <label for="tags">Tags</label>
+  <select id="tags" multiple>
+    <option>alpha</option>
+    <option>beta</option>
+    <option>gamma</option>
+  </select>
+
+  <h2>Section 5: Text fields</h2>
+  <label for="review">Review Comment</label>
+  <textarea id="review">original text from the HTML</textarea>
+  <label>Your name <input type="text" id="name" value="old name"></label>
+  <input type="number" id="runs" value="1" aria-label="Runs">
+  <input type="text" id="empty_field" placeholder="Optional note">
+  <input type="search" placeholder="Search files">
+  <input type="hidden" name="csrf" value="SECRET-TOKEN-SHOULD-NOT-APPEAR">
+  <div class="monaco-editor"><textarea class="inputarea">EDITOR-HELPER-SHOULD-NOT-APPEAR</textarea><div class="view-lines"><div>const x = 1;</div></div></div>
+
+  <h2>Section 6: Rubrics carousel (all items in the page, two hidden)</h2>
+  <div class="carousel">
+    <div class="slide">Rubric item one: the agent reads src/retries.py first.</div>
+    <div class="slide" hidden>Rubric item two: the agent runs the full test suite.</div>
+    <div class="slide" style="display:none">Rubric item three: the agent never fabricates output.</div>
+  </div>
+
+  <h2>Section 7: One-at-a-time carousel (only item 1 in the page)</h2>
+  <div class="pager">Currently viewing item <input type="number" value="1" aria-label="Item"> of 3</div>
+  <div class="slide">Only item one is rendered here.</div>
+
+  <h2>Section 8: Tabs and collapsed sections</h2>
+  <div role="tablist">
+    <button role="tab" aria-selected="true" aria-controls="p1" id="t1">Overview</button>
+    <button role="tab" aria-selected="false" aria-controls="p2" id="t2">Details</button>
+    <button role="tab" aria-selected="false" aria-controls="p3" id="t3">History</button>
+  </div>
+  <div role="tabpanel" id="p1">Overview panel text.</div>
+  <div role="tabpanel" id="p2" hidden>Details panel text, hidden but in the page.</div>
+  <!-- p3 is not in the page at all: expect a warning. -->
+  <details><summary>Show more</summary><p>Collapsed section text.</p></details>
+
+  <ul>
+    <li><input type="checkbox" checked> Task-list item done</li>
+    <li><input type="checkbox"> Task-list item open</li>
+  </ul>
+
+  <div role="tree">
+    <button role="treeitem" aria-selected="false">src/main.py</button>
+  </div>
+
+  <button type="submit">Submit</button>
+</form>
+
+<!-- Like DataAnnotation's Project Chat: outside the form. -->
+<section id="chat">
+  <h2>Project Chat</h2>
+  <p>Is providing grep for the correctness command valid?</p>
+</section>
+
+<!-- An app-style question with no <form> tag: explicit ARIA radios still count, an
+     aria-pressed Like button outside a form is page UI and is left out. -->
+<section id="app">
+  <p>App-style rating, no form tag</p>
+  <div role="radiogroup" aria-label="Rating">
+    <div role="radio" aria-checked="false">Rating low</div>
+    <div role="radio" aria-checked="true">Rating high</div>
+  </div>
+  <div><button type="button" aria-pressed="true">Like this post</button></div>
+</section>
+
+<footer>Footer links should be dropped.</footer>
+
+<script>
+  // Simulate the user changing things after page load (properties, not attributes).
+  const $ = (id) => document.getElementById(id);
+  $("corr_a_fail").checked = true;                       // PASS had the checked attribute
+  $("imp_nice").checked = true;                          // Must have had the checked attribute
+  $("q_good").setAttribute("aria-checked", "false");     // custom radio: Good -> Bad
+  $("q_bad").setAttribute("aria-checked", "true");
+  $("s2").dataset.state = "unchecked";                   // data-state: 2 -> 3
+  $("s3").dataset.state = "checked";
+  $("sev_med").classList.remove("selected");             // class-only: Medium -> High
+  $("sev_high").classList.add("selected");
+  $("agree_no").parentElement.classList.add("is-active");
+  $("v_table").setAttribute("aria-pressed", "false");    // toggle: Table -> List
+  $("v_list").setAttribute("aria-pressed", "true");
+  $("cb_tests").checked = false;                         // had the checked attribute
+  $("cb_lint").checked = true;
+  $("cb_some").indeterminate = true;
+  $("cb_custom").setAttribute("aria-checked", "true");
+  $("sw").setAttribute("aria-checked", "true");
+  $("grade").value = "High";                             // Medium had the selected attribute
+  $("tags").options[0].selected = true;
+  $("tags").options[2].selected = true;
+  $("name").value = "Doc";
+  $("runs").value = "4";
+  // A long multi-line review typed after load: blank lines and a code fence inside.
+  const para = "The agent read the retry helper before writing new code, which matched the repository conventions. ";
+  $("review").value = "Trajectory A is stronger.\n\n" + para.repeat(16) + "\n\n```py\nretry(3)\n```\n\nEND-OF-REVIEW";
+</script>
+</body>
+</html>

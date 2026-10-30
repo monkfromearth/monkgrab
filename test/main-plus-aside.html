@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonkGrab main-content test page</title>
+</head>
+<body>
+<!--
+  A normal article page (no form): <main> holds the article, and a large block sits
+  outside it. MonkGrab keeps main first and must APPEND the outside block, not drop it.
+-->
+<nav><a href="/">Home</a></nav>
+<main>
+  <h1>Article title</h1>
+  <p>MAIN-CONTENT-MARKER. This is the main article body.</p>
+</main>
+<aside id="outside">
+  <h2>Large block outside main</h2>
+  <p id="outside-text"></p>
+</aside>
+<script>
+  document.getElementById("outside-text").textContent =
+    "OUTSIDE-BLOCK-MARKER. " + "This sidebar holds real content that a main-only rule would throw away. ".repeat(30);
+</script>
+</body>
+</html>
