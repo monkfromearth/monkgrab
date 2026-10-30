@@ -7,10 +7,10 @@
 <body>
 <!--
   An ordinary article page: no task form, just the page furniture most sites have
-  (search boxes, menu toggles, Like buttons, code tabs, a newsletter box, a link
-  sidebar). test/run.mjs runs the 1.0.1 converter and the current one on this page:
-  the output must match 1.0.1 line for line, plus the article's own header, which
-  1.0.1 dropped.
+  (search boxes, menu toggles, Like buttons, code tabs, a newsletter box, an empty
+  comment box, a link sidebar). test/run.mjs runs the 1.0.1 converter and the current
+  one on this page: the output must match 1.0.1 line for line, plus the article's own
+  header, which 1.0.1 dropped.
 -->
 <header class="site">
   <a href="/">Home</a>
@@ -50,6 +50,10 @@ const b = 2;</pre>
       <p>Get the newsletter.</p>
       <label>Email address <input type="email" name="email"></label>
       <button>Subscribe</button>
+    </form>
+    <form class="comment">
+      <textarea name="text" aria-label="Add a comment"></textarea>
+      <button>Add comment</button>
     </form>
     <ul>
       <li>List item one</li>

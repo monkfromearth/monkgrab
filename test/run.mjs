@@ -205,7 +205,7 @@ const EXPECT = {
     lines: ["## Daily Paper", "# Article title from the article header", "- List item two"],
     has: ["ARTICLE-BODY-MARKER", "LAST-PARAGRAPH-MARKER", "\nHot\n", "```\nconst a = 1;\n\nconst b = 2;\n```"],
     not: ["> Form:", "> Warning:", "Value:", "(x)", "[x]", "[ ]", "( )", "Search", "Menu", "Section A", "Subscribe",
-      "newsletter", "Like", "Follow", "Bookmark", "Another story", "outside the main content", "Footer text"],
+      "newsletter", "comment", "Like", "Follow", "Bookmark", "Another story", "outside the main content", "Footer text"],
     // Same as 1.0.1, except the article's own <header>, which 1.0.1 dropped.
     sameAsBase: ["# Article title from the article header", "By Doc, 30 October 2026"],
   },

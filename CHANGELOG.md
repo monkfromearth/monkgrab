@@ -54,13 +54,14 @@ All notable changes to MonkGrab are documented here. Format loosely follows
   downloaded file and a failed save into a read-only folder).
 
 ### Unchanged on ordinary pages
-- Articles, docs and blogs come out as in 1.0.1. Checked with `test/compare.mjs` on 13
-  live sites: Paul Graham, Hacker News, Python docs, react.dev, BBC and monkfrom.earth
-  came out identical. Where a page differs, it is one of the fixes above: no CSS in the
-  text (Wikipedia), article headers kept (blog index pages), prose outside `main`
-  appended (the dev.to sidebar), and real checkboxes and ARIA radios marked (arxiv's
-  toggles, tailwindcss.com's theme picker).
-  Small search, sign-up and log-in forms with nothing typed in them are still skipped.
+- Articles, docs and blogs come out as in 1.0.1. Checked with `test/compare.mjs` on 15
+  live sites: MDN, Paul Graham, Hacker News (front page and a comment thread), Python
+  docs, react.dev, BBC and monkfrom.earth came out identical. Where a page differs, it is
+  one of the fixes above: no CSS in the text (Wikipedia), article headers kept (blog
+  index pages), prose outside `main` appended (the dev.to sidebar), and real checkboxes
+  and ARIA radios marked (arxiv's toggles, tailwindcss.com's theme picker).
+- Small search, sign-up, log-in and comment forms with nothing typed in them are still
+  skipped.
 
 ### Changed
 - The download is a base64 `data:` URL (about 1.33x the text, where percent-encoding

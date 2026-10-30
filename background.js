@@ -20,7 +20,7 @@ function extractFrame() {
   // mark Like/Follow buttons, menus and code tabs on ordinary pages, so they count as
   // answers only inside a form or an explicit choice group.
   const FORM_SCOPE = "form,[role=form],[role=radiogroup],[role=group],[role=listbox]";
-  const ANSWER_CONTROLS = "textarea,select,input[type=radio],input[type=checkbox],[role=radio],[role=checkbox],[role=switch]";
+  const CHOICE_CONTROLS = "select,input[type=radio],input[type=checkbox],[role=radio],[role=checkbox],[role=switch]";
   const SEARCHY = /search|query|filter|find/i;
   // Code editors (Monaco, CodeMirror 5) keep a hidden helper textarea for typing.
   const EDITOR_HELPER = ".inputarea, .monaco-editor textarea, .CodeMirror textarea";
@@ -305,11 +305,12 @@ function extractFrame() {
     return !(p && p.closest("article,form,dialog,[role=dialog]"));
   }
 
-  // A small search, sign-up or log-in form: no answer controls, nothing typed, little
+  // A small search, sign-up, log-in or comment form: no choices, nothing typed, little
   // text. Page UI, skipped as before. Big forms (a whole task page) are always walked.
   function isUiForm(form) {
-    if (form.querySelector(ANSWER_CONTROLS)) return false;
-    if ([...form.querySelectorAll("input")].some((i) => !NO_VALUE_INPUTS.has(i.type) && i.type !== "password" && i.value)) return false;
+    if (form.querySelector(CHOICE_CONTROLS)) return false;
+    const typed = (i) => !NO_VALUE_INPUTS.has(i.type) && i.type !== "password" && !i.matches(EDITOR_HELPER) && i.value.trim();
+    if ([...form.querySelectorAll("input,textarea")].some(typed)) return false;
     return squash(form.textContent).length < 400;
   }
 

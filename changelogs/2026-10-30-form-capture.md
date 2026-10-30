@@ -26,15 +26,17 @@ MonkGrab 1.1.0. Full release notes: [CHANGELOG.md](../CHANGELOG.md#110---2026-10
 - Ordinary pages (articles, docs, blogs) come out as in 1.0.1, apart from the fixes above.
 
 ## Tests
+- CodeRabbit CLI review of the branch: 0 findings.
 - `node test/run.mjs`: 38 checks pass on the bundled pages (form state, ordinary page
   vs 1.0.1, main content, frame selection, download errors). With the saved DA STA-4
   page added: 42 pass (350 radios, 20 checkboxes, 1 select, 38 filled textareas, all
   matching the page's live state).
 - `test/e2e.mjs` in Chrome for Testing 1208 with the unpacked extension: 2 of 2 pass
   (the right file downloaded; a read-only folder shows `!` and the reason).
-- `test/compare.mjs`, 1.0.1 vs 1.1.0 on 15 live sites. 13 loaded (GitHub and MDN timed
-  out). The output was identical on 8 (Paul Graham, Hacker News, Python docs, react.dev,
-  BBC, monkfrom.earth, plus 2 bot-check pages). On the other 5, every
+- `test/compare.mjs`, 1.0.1 vs 1.1.0 on 16 live sites over two runs. 15 loaded (GitHub
+  timed out both times). The output was identical on 10 (MDN, Paul Graham, the Hacker
+  News front page and a 29 KB comment thread, Python docs, react.dev, BBC,
+  monkfrom.earth, plus 2 bot-check pages). On the other 5, every
   difference is one of the fixes above: Wikipedia (CSS no longer leaks), arxiv (toggles
   marked), tailwindcss.com (theme radios marked), dev.to (sidebar prose appended), and
   Pragmatic Engineer (post titles from article headers).

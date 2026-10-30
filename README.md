@@ -70,7 +70,7 @@ appended below it. Ad and widget frames are filtered out.
 - **Form answers captured**: every radio, checkbox, toggle, dropdown and text box is written with its current state (`(x)`, `[x]`, `Selected:`, `Value:`), read live, so answers you changed after the page loaded count.
 - **Whole task pages**: forms are walked like any other block, so a task page whose questions sit inside one big `<form>` is kept in full, in page order.
 - **Never drops a big block**: the main content goes first; prose outside it (1,500+ characters that aren't link text) and every substantial frame are appended. Menus, link lists, and small ad/widget frames are left out.
-- **Ordinary pages unchanged**: articles, docs and blogs come out as they did in 1.0.1. Search boxes, sign-up forms, Like/Follow buttons, menu items and code tabs are left out.
+- **Ordinary pages unchanged**: articles, docs and blogs come out as they did in 1.0.1. Search boxes, empty sign-up and comment forms, Like/Follow buttons, menu items and code tabs are left out.
 - **Says why a save failed**: if Chrome can't write the file (a missing or read-only downloads folder, a full disk, a policy block), the icon keeps a red **!** and hovering it shows the reason.
 - **Warns about hidden content**: if a carousel shows "item 1 of 9" or a tab's panel is not on the page, the file says so at the top.
 - **Auto-named files**: `<domain>_<slug>_<YYYY-MM-DD_HH-MM-SS>.md`, with title, source URL, and capture time at the top.
@@ -190,7 +190,7 @@ no remote code, no build step required to run it.
    URLs to absolute via `new URL(u, location.href)`. Form controls are rendered from
    their live DOM state (see [Output format](#output-format)). Skipped: non-content tags
    (`script`, `style`, `svg`, `template`, `iframe`...), every `nav`, any `header`/`footer`
-   that isn't an article's own, and small search/sign-up forms with nothing typed in them.
+   that isn't an article's own, and small search/sign-up/comment forms with nothing typed in them.
    Each frame returns `{ url, title, md, len, stats, warnings }`.
 4. **Rank & assemble.** Frames are filtered (`len > 150`), de-duplicated and sorted by
    text length. The biggest frame goes first; every other frame with 500+ characters

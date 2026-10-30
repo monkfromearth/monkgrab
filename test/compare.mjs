@@ -35,6 +35,7 @@ const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : [
   "https://github.com/monkfromearth/monkgrab",
   "https://paulgraham.com/greatwork.html",
   "https://news.ycombinator.com/",
+  "https://news.ycombinator.com/item?id=8863",
   "https://docs.python.org/3/library/re.html",
   "https://react.dev/learn",
   "https://www.bbc.com/news",
