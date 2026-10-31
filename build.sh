@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Package MonkGrab for the Chrome Web Store.
 # Zips only the files the extension needs at runtime (manifest, service worker,
-# and icons) into dist/monkgrab-v<version>.zip. Docs, license, and dev files are
+# converter, and icons) into dist/monkgrab-v<version>.zip. Docs, license, and dev files are
 # excluded from the upload.
 set -euo pipefail
 
@@ -18,6 +18,7 @@ rm -f "$OUT"
 zip -r "$OUT" \
   manifest.json \
   background.js \
+  extract.js \
   icons \
   -x "icons/icon.svg"          # source art, not needed at runtime
 

@@ -1,6 +1,6 @@
 # MonkGrab: Privacy Policy
 
-_Last updated: 2026-06-20_
+_Last updated: 2026-10-30_
 
 **MonkGrab collects nothing. It sends nothing anywhere. Everything happens on your own machine.**
 
@@ -50,6 +50,8 @@ Because MonkGrab reads every frame of the page you invoke it on, the saved file
 includes whatever those frames contain at that moment. You are saving your own
 page, to your own disk, by your own action, and nothing is shared. If a page shows
 sensitive content in a frame, that content will appear in the file you save.
+This includes the state of form fields on the page: which options are picked and
+the text typed into text boxes. Password fields are never written out.
 Treat the saved `.md` as you would any other personal download.
 
 ## Changes

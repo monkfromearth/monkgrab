@@ -144,7 +144,9 @@
       <div class="card"><h3>Cross-origin iframes</h3><p>The content every other tool drops. The whole reason MonkGrab exists.</p></div>
       <div class="card"><h3>Clean Markdown</h3><p>Headings, lists, bold/italic, links, images, inline &amp; block code, quotes, rules.</p></div>
       <div class="card"><h3>Links that survive</h3><p>Relative links and images are resolved to full URLs, so they still work off-site.</p></div>
-      <div class="card"><h3>Smart frame ranking</h3><p>Keeps the real content, filters out nav, chrome, ads, and widgets.</p></div>
+      <div class="card"><h3>Form answers captured</h3><p>Every radio, checkbox, dropdown and text box is saved with its current state: <code>(x)</code>, <code>[x]</code>, <code>Selected:</code>, <code>Value:</code>.</p></div>
+      <div class="card"><h3>Never drops a big block</h3><p>Main content first, then any real prose outside it and every substantial frame. Menus and small ad frames are left out.</p></div>
+      <div class="card"><h3>Says why a save failed</h3><p>A missing or read-only downloads folder no longer looks like a success. Hover the red <strong>!</strong> for the reason.</p></div>
       <div class="card"><h3>Fully local</h3><p>Conversion runs in your browser. No server, no network calls, nothing leaves your disk.</p></div>
     </div>
   </div>
@@ -203,11 +205,13 @@
     <ol class="steps">
       <li>A click or hotkey calls <code>grab()</code>.</li>
       <li>It injects <code>extractFrame</code> into <strong>every frame</strong> via <code>chrome.scripting.executeScript({ allFrames: true })</code>: each runs in its own origin, defeating the cross-origin wall.</li>
-      <li>Each frame walks its DOM from the best content root (<code>main</code> → <code>article</code> → <code>body</code>) into Markdown, resolving relative URLs to absolute.</li>
-      <li>Frames are ranked by text length; the main one is kept and only substantial extra frames are appended (ads/widgets filtered out).</li>
-      <li>The Markdown is downloaded as a <code>data:</code> URL, the right approach since <code>createObjectURL</code> is unavailable in MV3 workers.</li>
+      <li>Each frame walks its DOM into Markdown, resolving relative URLs to absolute. <code>main</code> or <code>article</code> goes first, then any real prose outside it; menus and link lists are left out. Forms are walked like any other block, so whole task pages are kept.</li>
+      <li>Form controls are written from their live state, so answers changed after the page loaded are saved as they are now.</li>
+      <li>Frames are ranked by text length; the biggest goes first and every other frame with real content is appended (small ad and widget frames are left out).</li>
+      <li>The Markdown is downloaded as a base64 <code>data:</code> URL, the right approach since <code>createObjectURL</code> is unavailable in MV3 workers.</li>
+      <li>It waits for Chrome to finish writing the file. If the save fails, a red <strong>!</strong> stays on the icon and hovering it shows why.</li>
     </ol>
-    <p style="margin-top:16px">It's one heavily-commented file: <a href="https://github.com/monkfromearth/monkgrab/blob/main/background.js"><code>background.js</code></a>.</p>
+    <p style="margin-top:16px">It's two commented files: the converter, <a href="https://github.com/monkfromearth/monkgrab/blob/main/extract.js"><code>extract.js</code></a>, and the service worker, <a href="https://github.com/monkfromearth/monkgrab/blob/main/background.js"><code>background.js</code></a>.</p>
   </div>
 </section>
 

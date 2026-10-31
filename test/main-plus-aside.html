@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonkGrab main-content test page</title>
+</head>
+<body>
+<!--
+  A normal article page (no form): <main> holds the article, and a large block sits
+  outside it. MonkGrab keeps main first and must APPEND the outside block, not drop it.
+-->
+<nav><a href="/">Home</a></nav>
+<main>
+  <h1>Article title</h1>
+  <p>MAIN-CONTENT-MARKER. This is the main article body.</p>
+  <input type="checkbox" id="kept" checked>
+</main>
+<aside id="outside">
+  <h2>Large block outside main</h2>
+  <!-- The checkbox above is named by this label: it must print once, with its box. -->
+  <label for="kept">Label kept in the aside</label>
+  <p id="outside-text"></p>
+</aside>
+<script>
+  // Every word in its own <span>, spaces between them as separate text nodes: about
+  // 1,700 visible characters, but only about 1,420 if the spaces are not counted.
+  document.getElementById("outside-text").innerHTML = "<span>OUTSIDE-BLOCK-MARKER.</span> " +
+    Array.from({ length: 280 }, () => "<span>abcde</span>").join(" ");
+</script>
+</body>
+</html>

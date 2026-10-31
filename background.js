@@ -1,113 +1,13 @@
-// MonkGrab: webpage to Markdown service worker.
-// Injects into EVERY frame of the active tab (allFrames bypasses the cross-origin
-// iframe wall, since the function runs inside each frame's own context), converts
-// each content frame's DOM to Markdown right there, then downloads ONE .md file
-// named <domain>_<path>_<datetime>.md. No external tools, no second step.
+// MonkGrab service worker. A click or the hotkey injects extractFrame (extract.js)
+// into EVERY frame of the active tab (allFrames bypasses the cross-origin iframe wall,
+// since the function runs inside each frame's own context), keeps the content frames,
+// and downloads ONE .md file named <domain>_<title>_<datetime>.md.
 
-// Runs inside each frame. Self-contained (serialized by chrome.scripting) DOM ->
-// Markdown walker. Returns this frame's markdown + a length to rank frames by.
-function extractFrame() {
-  const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "NAV", "HEADER", "FOOTER", "SVG", "BUTTON", "FORM", "IFRAME"]);
+importScripts("extract.js"); // defines extractFrame()
 
-  // Resolve relative href/src to absolute against this frame's URL, so links and
-  // images still work once the .md is saved off-site. Falls back to the raw value.
-  function abs(u) {
-    try { return new URL(u, location.href).href; } catch (_) { return u; }
-  }
-
-  function inline(node) {
-    let out = "";
-    node.childNodes.forEach((c) => {
-      if (c.nodeType === 3) out += c.textContent.replace(/\s+/g, " ");
-      else if (c.nodeType === 1) {
-        // SVG and other non-HTML elements report a case-sensitive tagName; normalize.
-        const t = c.tagName.toUpperCase();
-        if (t === "BR") out += "\n";
-        else if (t === "STRONG" || t === "B") out += "**" + inline(c).trim() + "**";
-        else if (t === "EM" || t === "I") out += "*" + inline(c).trim() + "*";
-        else if (t === "CODE") out += "`" + c.textContent + "`";
-        else if (t === "A") {
-          const href = c.getAttribute("href") || "";
-          const txt = inline(c).trim();
-          out += href ? `[${txt}](${abs(href)})` : txt;
-        } else if (t === "IMG") {
-          const src = c.getAttribute("src") || "";
-          const alt = c.getAttribute("alt") || "";
-          out += src ? `![${alt}](${abs(src)})` : "";
-        } else out += inline(c);
-      }
-    });
-    return out;
-  }
-
-  // Render a <ul>/<ol> and its nested sub-lists as indented Markdown bullets.
-  // Robust to invalid markup (e.g. <ul><p><li>...</ul>): list membership is decided
-  // by each <li>'s nearest list ancestor, and a clone with nested lists stripped
-  // gives the item's own text, so nested items never collapse into their parent line.
-  function renderList(list, baseDepth) {
-    let out = "";
-    const counters = new Map();
-    list.querySelectorAll("li").forEach((li) => {
-      const owner = li.closest("ul,ol");
-      if (!owner || !list.contains(owner)) return;
-      let depthN = 0, a = owner;
-      while (a && a !== list) { if (a.tagName === "UL" || a.tagName === "OL") depthN++; a = a.parentElement; }
-      let mark;
-      if (owner.tagName === "OL") { const n = (counters.get(owner) || 0) + 1; counters.set(owner, n); mark = n + ". "; }
-      else mark = "- ";
-      const clone = li.cloneNode(true);
-      clone.querySelectorAll("ul,ol").forEach((n) => n.remove());
-      const line = inline(clone).replace(/\s+/g, " ").trim();
-      if (line) out += "  ".repeat(baseDepth + depthN) + mark + line + "\n";
-    });
-    return out;
-  }
-
-  function block(node, depth) {
-    let md = "";
-    node.childNodes.forEach((c) => {
-      if (c.nodeType === 3) {
-        const t = c.textContent.replace(/\s+/g, " ").trim();
-        if (t) md += t + "\n\n";
-        return;
-      }
-      if (c.nodeType !== 1) return;
-      const tag = c.tagName.toUpperCase();
-      if (SKIP.has(tag)) return;
-      if (/^H[1-6]$/.test(tag)) {
-        md += "#".repeat(+tag[1]) + " " + inline(c).trim() + "\n\n";
-      } else if (tag === "P") {
-        const t = inline(c).trim();
-        if (t) md += t + "\n\n";
-      } else if (tag === "UL" || tag === "OL") {
-        // renderList walks descendant <li>s by nearest list ancestor (not direct
-        // children), so it survives invalid markup like <ul><p><li>...</ul> AND
-        // keeps nested sub-lists as properly indented sub-bullets.
-        md += renderList(c, depth) + "\n";
-      } else if (tag === "PRE") {
-        md += "```\n" + c.textContent.replace(/\n+$/, "") + "\n```\n\n";
-      } else if (tag === "BLOCKQUOTE") {
-        md += "> " + inline(c).trim().replace(/\n/g, "\n> ") + "\n\n";
-      } else if (tag === "HR") {
-        md += "---\n\n";
-      } else if (tag === "IMG") {
-        md += inline(c) + "\n\n";
-      } else {
-        md += block(c, depth); // descend into divs/sections/etc.
-      }
-    });
-    return md;
-  }
-
-  const root =
-    document.querySelector("main") ||
-    document.querySelector("[role=main]") ||
-    document.querySelector("article") ||
-    document.body ||
-    document.documentElement;
-  const md = root ? block(root, 0).replace(/\n{3,}/g, "\n\n").trim() : "";
-  return { url: location.href, title: document.title || "", md, len: md.length };
-}
+const MIN_FRAME_CHARS = 150;   // frames with less are empty or broken
+const EXTRA_FRAME_CHARS = 500; // other frames this size or bigger are content, not ads
+const DOWNLOAD_WAIT_MS = 15000; // a save still running after this is slow, not failed
 
 function pad(n) { return String(n).padStart(2, "0"); }
 
@@ -127,6 +27,29 @@ function buildName(url, title) {
   return [host, slug, `${date}_${time}`].filter(Boolean).join("_") + ".md";
 }
 
+// UTF-8 text -> base64. A base64 data: URL is ~1.33x the text, where percent-encoding
+// is up to 3x, which keeps big form captures under Chrome's 2 MB URL ceiling.
+function toBase64(text) {
+  const bytes = new TextEncoder().encode(text);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+// One-line summary of the form state, so a reader sees the picks were captured.
+function formSummary(frames) {
+  const s = {};
+  frames.forEach((f) => { for (const k in f.stats || {}) s[k] = (s[k] || 0) + f.stats[k]; });
+  if (!s.radios && !s.checks && !s.selects && !s.texts) return "";
+  const n = (k, one, many) => `${k} ${k === 1 ? one : many || one + "s"}`;
+  const parts = [];
+  if (s.radios) parts.push(`${n(s.radios, "choice option")} in ${n(s.groups, "group")} (${s.picked} picked, ${n(s.unpicked, "group")} with no pick)`);
+  if (s.checks) parts.push(`${n(s.checks, "checkbox or toggle", "checkboxes and toggles")} (${s.checked} on)`);
+  if (s.selects) parts.push(n(s.selects, "dropdown"));
+  if (s.texts) parts.push(`${n(s.texts, "text field")} (${s.filled} filled)`);
+  return parts.join(", ");
+}
+
 async function grab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return { ok: false, msg: "No active tab." };
@@ -141,29 +64,34 @@ async function grab() {
     return { ok: false, msg: "Inject failed: " + e.message };
   }
 
+  const seen = new Set();
   const ranked = results
-    .map((r) => r.result)
-    .filter((f) => f && f.len > 150)
+    .map((r) => r && r.result)
+    .filter((f) => f && f.len > MIN_FRAME_CHARS && !seen.has(f.md) && seen.add(f.md))
     .sort((a, b) => b.len - a.len);
   if (!ranked.length) return { ok: false, msg: "No content found on this page." };
 
   const best = ranked[0];
-  // Keep the main frame, plus any secondary frame substantial enough to be real
-  // content (not an ad/widget): at least 500 chars AND >=15% of the main frame.
-  // This is what actually "drops nav/chrome/widgets".
-  const floor = Math.max(500, Math.round(best.len * 0.15));
-  const frames = [best, ...ranked.slice(1).filter((f) => f.len >= floor)];
+  // Keep the biggest frame first, then every other frame with real content or a
+  // filled-in answer. Only small ad/widget frames are left out.
+  const frames = [best, ...ranked.slice(1).filter((f) => f.len >= EXTRA_FRAME_CHARS ||
+    (f.stats && f.stats.picked + f.stats.checked + f.stats.filled > 0))];
 
   const title = (tab.title || best.title || "Untitled").trim();
   const captured = new Date().toString();
-  let body = `# ${title}\n\n> Source: ${tab.url}\n> Captured: ${captured}\n\n---\n\n`;
+  let body = `# ${title}\n\n> Source: ${tab.url}\n> Captured: ${captured}\n`;
+  const form = formSummary(frames);
+  if (form) body += `> Form: ${form}\n`;
+  [...new Set(frames.flatMap((f) => f.warnings || []))].forEach((w) => { body += `> Warning: ${w}\n`; });
+  body += `\n---\n\n`;
   body += frames
     .map((f, i) => (i === 0 ? f.md : `\n\n---\n<!-- frame: ${f.url} -->\n\n${f.md}`))
     .join("");
 
-  const dataUrl = "data:text/markdown;charset=utf-8," + encodeURIComponent(body);
+  const dataUrl = "data:text/markdown;charset=utf-8;base64," + toBase64(body);
+  let id;
   try {
-    await chrome.downloads.download({
+    id = await chrome.downloads.download({
       url: dataUrl,
       filename: `monkgrab/${buildName(tab.url, title)}`,
       conflictAction: "uniquify",
@@ -172,14 +100,62 @@ async function grab() {
   } catch (e) {
     return { ok: false, msg: "Download failed: " + e.message };
   }
+  const error = await downloadError(id);
+  if (error) return { ok: false, msg: "Download failed: " + (DOWNLOAD_ERRORS[error] || error) + ` (${error})` };
   return { ok: true, msg: `Downloaded .md (${frames.length} frame(s), ${best.len} chars).` };
 }
 
-// Brief badge feedback since there's no popup: ✓ on success, ! on failure.
+const DOWNLOAD_ERRORS = {
+  FILE_ACCESS_DENIED: "Chrome can't write to the downloads folder. Check Settings > Downloads > Location, and that the folder exists and is writable",
+  FILE_NO_SPACE: "the disk is full",
+  FILE_NAME_TOO_LONG: "the file name is too long for this disk",
+  FILE_TOO_LARGE: "the file is too large for this disk",
+  FILE_BLOCKED: "downloads are blocked by Chrome settings or a policy",
+  FILE_VIRUS_INFECTED: "the virus scanner blocked the file",
+  FILE_SECURITY_CHECK_FAILED: "a security check blocked the file",
+  FILE_FAILED: "Chrome could not save the file",
+  // Also what Chrome reports when the downloads folder is missing or read-only.
+  USER_CANCELED: "Chrome cancelled the save. Check that the downloads folder in Settings > Downloads > Location exists and is writable",
+};
+
+// chrome.downloads.download() resolves once the download STARTS. A folder Chrome can't
+// write to, a full disk or a policy block only shows up after that, as an "interrupted"
+// state. Wait for the end state so a failed save is never reported as a success.
+// Returns null when the file was written, else Chrome's error code.
+function downloadError(id) {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      chrome.downloads.onChanged.removeListener(onChanged);
+      resolve(err);
+    };
+    const check = (state, error) => {
+      if (state === "complete") finish(null);
+      else if (state === "interrupted") finish(error || "FILE_FAILED");
+    };
+    const onChanged = (d) => {
+      if (d.id === id && d.state) check(d.state.current, d.error && d.error.current);
+    };
+    const timer = setTimeout(() => finish(null), DOWNLOAD_WAIT_MS);
+    chrome.downloads.onChanged.addListener(onChanged);
+    // It may already be over before the listener was added.
+    chrome.downloads.search({ id }).then(([item]) => item && check(item.state, item.error), () => {});
+  });
+}
+
+const DEFAULT_TITLE = (chrome.runtime && chrome.runtime.getManifest().action.default_title) || "MonkGrab";
+
+// Badge feedback since there's no popup: ✓ for 2 s on success. On failure the ! stays,
+// and hovering the icon shows the reason, until the next grab.
 async function flash(res) {
+  if (!res.ok) console.error("MonkGrab:", res.msg);
   await chrome.action.setBadgeBackgroundColor({ color: res.ok ? "#14b8a6" : "#dc2626" });
   await chrome.action.setBadgeText({ text: res.ok ? "✓" : "!" });
-  setTimeout(() => chrome.action.setBadgeText({ text: "" }), 2000);
+  await chrome.action.setTitle({ title: res.ok ? DEFAULT_TITLE : "MonkGrab could not save this page. " + res.msg });
+  if (res.ok) setTimeout(() => chrome.action.setBadgeText({ text: "" }), 2000);
 }
 
 // Click the toolbar icon -> grab + download immediately.
