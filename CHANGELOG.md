@@ -4,6 +4,28 @@ All notable changes to MonkGrab are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); versions follow
 [SemVer](https://semver.org/).
 
+## [1.1.1] - 2026-11-17
+
+### Fixed
+- **Content inside a list but outside its items was dropped.** Some React sites lay out
+  a whole section as one `<ul>` whose children are `<div>`s, not `<li>`s (a matrimony
+  profile page did this for its About text, hobbies, family and education). Browsers
+  show it all; MonkGrab kept only the `<li>` text, so the About paragraph and every
+  section heading were lost. That content is now written as ordinary blocks, in page
+  order. List items are kept wherever they sit, as before; a `<hr>` divider inside a
+  list (a menu separator) is still left out.
+- **Words in neighbouring blocks were glued together inside a list item or link.**
+  `<li><div>Age</div><div>25 to 33</div></li>` came out as `Age25 to 33`; it is now
+  `Age 25 to 33`. Same for numbered "most read" lists (`1When` is now `1 When`) and
+  image captions in galleries.
+
+### Tests
+- `test/list-with-blocks.html`: a list holding headings and paragraphs, label/value
+  items, a list wrapped in a `<div>`, and a plain list. 1.1.0 fails it; 1.1.1 passes.
+- `test/compare.mjs`, 1.1.0 vs 1.1.1 on 17 live sites: 13 identical; BBC, The Verge,
+  Wikipedia (Bhopal) and arXiv differ only by the spacing fix or one more line of
+  existing text. GitHub did not load in headless Chrome and was skipped.
+
 ## [1.1.0] - 2026-10-30
 
 ### Fixed

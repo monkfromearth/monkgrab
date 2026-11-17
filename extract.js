@@ -13,6 +13,10 @@ function extractFrame() {
   const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "SVG", "TEMPLATE", "IFRAME", "OBJECT", "CANVAS", "LINK", "META"]);
   const PHRASING = new Set(["A", "ABBR", "B", "CODE", "EM", "I", "KBD", "MARK", "Q", "S", "SMALL", "STRONG", "SUB", "SUP", "TIME", "U"]);
   const FIELDS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
+  // Block elements: inside a line of text (a list item, a link) each one is a separate word.
+  const BLOCKS = new Set(["ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "DD", "DIV", "DL", "DT", "FIGCAPTION", "FIGURE",
+    "FOOTER", "H1", "H2", "H3", "H4", "H5", "H6", "HEADER", "HR", "LI", "MAIN", "OL", "P", "PRE", "SECTION", "TABLE",
+    "TD", "TH", "TR", "UL"]);
   const NO_VALUE_INPUTS = new Set(["hidden", "submit", "button", "reset", "image"]);
   // Roles a custom option can have. Any other role (treeitem, row, gridcell...) uses
   // aria-selected for navigation, not for an answer.
@@ -324,29 +328,42 @@ function extractFrame() {
 
   function inline(node, skipLists) {
     let out = "";
+    // A block element (<div>Age</div><div>25 to 33</div>) is a word boundary: its text
+    // is kept apart from its neighbours by one space, added only where none is there.
+    let gap = false;
+    const add = (s) => {
+      if (!s) return;
+      if (gap && out && !/\s$/.test(out) && !/^\s/.test(s)) out += " ";
+      out += s;
+      gap = false;
+    };
     node.childNodes.forEach((c) => {
-      if (c.nodeType === 3) { out += c.textContent.replace(/\s+/g, " "); return; }
+      if (c.nodeType === 3) { add(c.textContent.replace(/\s+/g, " ")); return; }
       if (c.nodeType !== 1 || done.has(c)) return;
       // SVG and other non-HTML elements report a case-sensitive tagName; normalize.
       const t = c.tagName.toUpperCase();
-      if (t === "SVG") { out += svgName(c); return; }
+      if (t === "SVG") { add(svgName(c)); return; }
       if (SKIP.has(t) || (skipLists && (t === "UL" || t === "OL"))) return;
       const f = formText(c, t, true);
-      if (f !== null) { out += " " + f + " "; return; }
-      if (t === "BR") out += "\n";
-      else if (t === "STRONG" || t === "B") out += "**" + inline(c, skipLists).trim() + "**";
-      else if (t === "EM" || t === "I") out += "*" + inline(c, skipLists).trim() + "*";
-      else if (t === "CODE") out += "`" + c.textContent + "`";
+      if (f !== null) { add(" " + f + " "); return; }
+      if (t === "BR") add("\n");
+      else if (t === "STRONG" || t === "B") add("**" + inline(c, skipLists).trim() + "**");
+      else if (t === "EM" || t === "I") add("*" + inline(c, skipLists).trim() + "*");
+      else if (t === "CODE") add("`" + c.textContent + "`");
       else if (t === "A") {
         const href = c.getAttribute("href") || "";
         const txt = inline(c, skipLists).trim();
         // An image inside a link is part of the link: one LINK_MARK pair, not nested ones.
-        out += href ? LINK_MARK + `[${txt.split(LINK_MARK).join("")}](${abs(href)})` + LINK_MARK : txt;
+        add(href ? LINK_MARK + `[${txt.split(LINK_MARK).join("")}](${abs(href)})` + LINK_MARK : txt);
       } else if (t === "IMG") {
         const src = c.getAttribute("src") || "";
         const alt = c.getAttribute("alt") || "";
-        out += src ? LINK_MARK + `![${alt}](${abs(src)})` + LINK_MARK : "";
-      } else out += inline(c, skipLists);
+        add(src ? LINK_MARK + `![${alt}](${abs(src)})` + LINK_MARK : "");
+      } else if (BLOCKS.has(t)) {
+        gap = true;
+        add(inline(c, skipLists).trim());
+        gap = true;
+      } else add(inline(c, skipLists));
     });
     return out;
   }
@@ -356,10 +373,12 @@ function extractFrame() {
   // by each <li>'s nearest list ancestor, and the item's own text skips nested lists,
   // so nested items never collapse into their parent line. (No cloning: a clone
   // would lose live form state.)
+  // Content in the list but in no item (<ul><div><h4>About</h4><div>text</div></div>,
+  // a whole profile page laid out this way) is written as ordinary blocks, in place.
   function renderList(list, baseDepth) {
     let out = "";
     const counters = new Map();
-    list.querySelectorAll("li").forEach((li) => {
+    const item = (li) => {
       const owner = li.closest("ul,ol");
       if (!owner || !list.contains(owner) || done.has(li)) return;
       let depthN = 0, a = owner;
@@ -369,7 +388,23 @@ function extractFrame() {
       else mark = "- ";
       const line = inline(li, true).replace(/\s+/g, " ").trim();
       if (line) out += "  ".repeat(baseDepth + depthN) + mark + line + "\n";
-    });
+    };
+    // Items in page order; a child holding items is a wrapper and is walked through,
+    // a child holding none is loose content.
+    const walk = (node) => {
+      for (const c of node.children) {
+        if (done.has(c)) continue;
+        const tag = c.tagName.toUpperCase();
+        if (tag === "LI") { item(c); c.querySelectorAll("li").forEach(item); continue; }
+        // Items are kept wherever they sit, as before (even in a <nav> or <form>).
+        if (c.querySelector("li")) { walk(c); continue; }
+        // A divider between items is a menu separator, not content.
+        if (tag === "HR" || isNoise(c, tag)) continue;
+        const md = blockNode(c, baseDepth).trim();
+        if (md) out += (out && !out.endsWith("\n\n") ? "\n" : "") + md + "\n\n";
+      }
+    };
+    walk(list);
     return out;
   }
 
@@ -382,33 +417,40 @@ function extractFrame() {
         return;
       }
       if (c.nodeType !== 1 || done.has(c)) return;
-      const tag = c.tagName.toUpperCase();
-      if (isNoise(c, tag)) return;
-      const f = formText(c, tag, false);
-      if (f !== null) {
-        if (f) md += f + "\n\n";
-      } else if (tag === "BUTTON") {
-        // Plain action buttons ("Copy", "Submit") are UI. A long one is a clickable card.
-        if (textOf(c).length > CARD_BUTTON_TEXT) md += block(c, depth);
-      } else if (/^H[1-6]$/.test(tag)) {
-        md += "#".repeat(+tag[1]) + " " + inline(c).trim() + "\n\n";
-      } else if (tag === "P") {
-        const t = inline(c).trim();
-        if (t) md += t + "\n\n";
-      } else if (tag === "UL" || tag === "OL") {
-        md += renderList(c, depth) + "\n";
-      } else if (tag === "PRE") {
-        md += stash(fence(c.textContent)) + "\n\n";
-      } else if (tag === "BLOCKQUOTE") {
-        md += "> " + inline(c).trim().replace(/\n/g, "\n> ") + "\n\n";
-      } else if (tag === "HR") {
-        md += "---\n\n";
-      } else if (tag === "IMG") {
-        md += inline(c) + "\n\n";
-      } else {
-        md += block(c, depth); // descend into divs/sections/forms/etc.
-      }
+      md += blockNode(c, depth);
     });
+    return md;
+  }
+
+  // One element child of a block, as Markdown.
+  function blockNode(c, depth) {
+    let md = "";
+    const tag = c.tagName.toUpperCase();
+    if (isNoise(c, tag)) return md;
+    const f = formText(c, tag, false);
+    if (f !== null) {
+      if (f) md += f + "\n\n";
+    } else if (tag === "BUTTON") {
+      // Plain action buttons ("Copy", "Submit") are UI. A long one is a clickable card.
+      if (textOf(c).length > CARD_BUTTON_TEXT) md += block(c, depth);
+    } else if (/^H[1-6]$/.test(tag)) {
+      md += "#".repeat(+tag[1]) + " " + inline(c).trim() + "\n\n";
+    } else if (tag === "P") {
+      const t = inline(c).trim();
+      if (t) md += t + "\n\n";
+    } else if (tag === "UL" || tag === "OL") {
+      md += renderList(c, depth) + "\n";
+    } else if (tag === "PRE") {
+      md += stash(fence(c.textContent)) + "\n\n";
+    } else if (tag === "BLOCKQUOTE") {
+      md += "> " + inline(c).trim().replace(/\n/g, "\n> ") + "\n\n";
+    } else if (tag === "HR") {
+      md += "---\n\n";
+    } else if (tag === "IMG") {
+      md += inline(c) + "\n\n";
+    } else {
+      md += block(c, depth); // descend into divs/sections/forms/etc.
+    }
     return md;
   }
 

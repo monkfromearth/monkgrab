@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MonkGrab list-with-blocks test page</title>
+</head>
+<body>
+<!--
+  A profile page laid out the way some React sites do it: the whole detail section is
+  one <ul> whose children are <div>s, not <li>s, and list items hold label and value in
+  separate <div>s. Browsers show all of it; up to 1.1.0 MonkGrab kept only the <li> text
+  (ABOUT-MARKER and every heading were lost) and glued "Age" to "25 to 33".
+-->
+<main>
+  <h1>Profile title</h1>
+  <ul class="details">
+    <div>
+      <div><h4><span>About the member</span></h4>
+        <div><div>ABOUT-MARKER. A paragraph of free text that sits in a div inside the list.</div></div>
+      </div>
+    </div>
+    <div>
+      <div><h4><span>Hobbies</span></h4>
+        <div><div><img alt="icon" src="cooking.svg"><span>Cooking</span></div><div><span>Reading</span></div></div>
+      </div>
+    </div>
+    <div>
+      <div><h4><span>Background</span></h4>
+        <div><ul><li><span>Born in 2000</span></li><li><span>Lives in Bhopal</span></li></ul></div>
+      </div>
+    </div>
+    <div>
+      <div><h4><span>Preferences</span></h4>
+        <ul>
+          <li><div><div>Age</div><div>25 to 33</div></div></li>
+          <li><div><div>Height</div><div>5' 5" to 6' 4"</div></div></li>
+        </ul>
+      </div>
+    </div>
+  </ul>
+  <ul class="wrapped">
+    <div><li>Wrapped item one</li><li>Wrapped item two</li></div>
+  </ul>
+  <ul class="plain">
+    <li>Plain item with <a href="/x">a link</a> and <strong>bold</strong> text</li>
+  </ul>
+</main>
+</body>
+</html>
