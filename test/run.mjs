@@ -205,6 +205,15 @@ const EXPECT = {
     // Same as 1.0.1, except the article's own <header>, which 1.0.1 dropped.
     sameAsBase: ["# Article title from the article header", "By Doc, 30 October 2026"],
   },
+  "list-with-blocks.html": {
+    lines: ["#### About the member", "ABOUT-MARKER. A paragraph of free text that sits in a div inside the list.",
+      "#### Hobbies", "Cooking", "Reading", "#### Background", "  - Born in 2000", "  - Lives in Bhopal",
+      "#### Preferences", "  - Age 25 to 33", "  - Height 5' 5\" to 6' 4\"",
+      "- Wrapped item one", "- Wrapped item two"],
+    has: ["- Plain item with [a link](", "/x) and **bold** text"],
+    not: ["Age25", "Height5"],
+    once: ["ABOUT-MARKER", "Wrapped item one", "Born in 2000"],
+  },
   "main-plus-aside.html": {
     lines: ["# Article title", "[x] Label kept in the aside"],
     has: ["MAIN-CONTENT-MARKER", "OUTSIDE-BLOCK-MARKER", "<!-- outside the main content -->", "> Form: 1 checkbox or toggle (1 on)\n"],
@@ -265,7 +274,7 @@ async function testFrames() {
   check("UTF-8 survives the base64 download", uni.md.includes("café, 日本語, emoji 🤖"));
 }
 
-const pages = [path.join(here, "form-state.html"), path.join(here, "ordinary-page.html"), path.join(here, "main-plus-aside.html"), ...process.argv.slice(2).map((p) => path.resolve(p))];
+const pages = [path.join(here, "form-state.html"), path.join(here, "ordinary-page.html"), path.join(here, "main-plus-aside.html"), path.join(here, "list-with-blocks.html"), ...process.argv.slice(2).map((p) => path.resolve(p))];
 for (const p of pages) await testPage(p);
 await testFrames();
 await testDownloadErrors();
