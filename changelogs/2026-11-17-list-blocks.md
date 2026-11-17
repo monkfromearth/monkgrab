@@ -29,3 +29,13 @@ MonkGrab 1.1.1. Full release notes: [CHANGELOG.md](../CHANGELOG.md#111---2026-11
     text was already in the output once, higher up).
 - dev.to: menu dividers inside a list first came out as `---` lines; the divider rule
   removed them, and dev.to is identical again.
+
+## Review (CodeRabbit, `--base main`): 2 minor, both skipped
+- "A standalone `<img>` renders nothing" (the `IMG` branch in `blockNode` calls
+  `inline()` on the image's empty children). True, but older than this branch: every
+  image outside a paragraph, link or list item is dropped on every page, in 1.0.1 and
+  1.1.0 too. Fixing it adds images to most pages, so it gets its own branch and its own
+  regression compare.
+- "Text nodes directly inside a `<ul>` are skipped." True and unchanged from 1.1.0.
+  Browsers rarely produce it, and on menus it is separator text (` | `). Left out to
+  keep this change narrow.
